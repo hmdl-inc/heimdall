@@ -18,8 +18,6 @@ import {
   Target,
   Gavel,
   UserCheck,
-  Building2,
-  FolderKanban,
   Plus,
   Check,
   LogOut
@@ -273,7 +271,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                       onClick={() => setOrgDropdownOpen(!orgDropdownOpen)}
                       className="flex items-center gap-1 text-slate-500 hover:text-slate-700 hover:bg-slate-100 px-1.5 py-0.5 rounded transition-colors"
                     >
-                      <Building2 className="w-3 h-3" />
                       <span>{org?.name || 'Organization'}</span>
                       <ChevronDown className="w-3 h-3" />
                     </button>
@@ -318,7 +315,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                       onClick={() => setProjectDropdownOpen(!projectDropdownOpen)}
                       className="flex items-center gap-1 text-slate-500 hover:text-slate-700 hover:bg-slate-100 px-1.5 py-0.5 rounded transition-colors"
                     >
-                      <FolderKanban className="w-3 h-3" />
                       <span>{project?.name || 'Project'}</span>
                       <ChevronDown className="w-3 h-3" />
                     </button>
