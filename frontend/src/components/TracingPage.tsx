@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Project, Trace } from '../types';
 import { traceService } from '../services/traceService';
-import { Search, Filter, AlertCircle, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { Search, Filter, AlertCircle, CheckCircle2, XCircle, Clock, Loader2 } from 'lucide-react';
+import { TraceDetailPage } from './TraceDetailPage';
 
 interface TracingPageProps {
   project: Project;
@@ -30,9 +31,15 @@ const StatusBadge = ({ status }: { status: Trace['status'] }) => {
   );
 };
 
+const PAGE_SIZE = 50;
+
 export const TracingPage: React.FC<TracingPageProps> = ({ project }) => {
   const [traces, setTraces] = useState<Trace[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [displayLimit, setDisplayLimit] = useState(PAGE_SIZE);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [selectedTrace, setSelectedTrace] = useState<Trace | null>(null);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const loadTraces = async () => {
@@ -42,11 +49,58 @@ export const TracingPage: React.FC<TracingPageProps> = ({ project }) => {
     loadTraces();
   }, [project.id]);
 
+  // Reset display limit when search term changes
+  useEffect(() => {
+    setDisplayLimit(PAGE_SIZE);
+  }, [searchTerm]);
+
   const filteredTraces = traces.filter(t => 
     t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     t.trace_id.includes(searchTerm) ||
     t.user_id.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const hasMore = displayLimit < filteredTraces.length;
+
+  const loadMore = useCallback(() => {
+    if (isLoadingMore || !hasMore) return;
+    
+    setIsLoadingMore(true);
+    // Simulate network delay for smoother UX
+    setTimeout(() => {
+      setDisplayLimit(prev => Math.min(prev + PAGE_SIZE, filteredTraces.length));
+      setIsLoadingMore(false);
+    }, 300);
+  }, [isLoadingMore, hasMore, filteredTraces.length]);
+
+  // Infinite scroll handler
+  useEffect(() => {
+    const container = tableContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      // Load more when scrolled within 100px of bottom
+      if (scrollHeight - scrollTop - clientHeight < 100) {
+        loadMore();
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [loadMore]);
+
+  const displayedTraces = filteredTraces.slice(0, displayLimit);
+
+  // Show detail page if a trace is selected
+  if (selectedTrace) {
+    return (
+      <TraceDetailPage 
+        trace={selectedTrace} 
+        onBack={() => setSelectedTrace(null)} 
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -72,10 +126,10 @@ export const TracingPage: React.FC<TracingPageProps> = ({ project }) => {
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden flex flex-col" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+        <div ref={tableContainerRef} className="overflow-auto flex-1">
             <table className="w-full text-sm text-left">
-                <thead className="bg-slate-50 text-slate-500 border-b border-slate-200">
+                <thead className="bg-slate-50 text-slate-500 border-b border-slate-200 sticky top-0">
                     <tr>
                         <th className="px-6 py-3 font-medium">Trace ID</th>
                         <th className="px-6 py-3 font-medium">Name</th>
@@ -87,8 +141,12 @@ export const TracingPage: React.FC<TracingPageProps> = ({ project }) => {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                    {filteredTraces.slice(0, 50).map((trace) => (
-                        <tr key={trace.trace_id} className="hover:bg-slate-50/50 group cursor-pointer">
+                    {displayedTraces.map((trace) => (
+                        <tr 
+                            key={trace.trace_id} 
+                            className="hover:bg-slate-50/50 group cursor-pointer"
+                            onClick={() => setSelectedTrace(trace)}
+                        >
                             <td className="px-6 py-3 font-mono text-xs text-slate-500">
                                 {trace.trace_id.substring(0, 8)}...
                             </td>
@@ -126,10 +184,17 @@ export const TracingPage: React.FC<TracingPageProps> = ({ project }) => {
                     )}
                 </tbody>
             </table>
+            {/* Loading indicator */}
+            {isLoadingMore && (
+                <div className="flex items-center justify-center py-4 text-slate-500">
+                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    <span className="text-sm">Loading more traces...</span>
+                </div>
+            )}
         </div>
         <div className="px-6 py-3 border-t border-slate-200 bg-slate-50 text-xs text-slate-500 flex justify-between">
-            <span>Showing top 50 of {filteredTraces.length} results</span>
-            <span>{filteredTraces.length > 50 ? 'Use search to find specific traces' : 'End of list'}</span>
+            <span>Showing {displayedTraces.length} of {filteredTraces.length} results</span>
+            <span>{hasMore ? 'Scroll down to load more' : 'End of list'}</span>
         </div>
       </div>
     </div>
