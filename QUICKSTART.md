@@ -125,24 +125,24 @@ If you already have traces from an SDK with a different project ID:
 3. You'll see all projects that have SDK traces
 4. Click **Link** to connect that project's traces to your dashboard
 
-## Running the Examples
+## Running the Tests
 
-### Python Example
+### Python SDK Test
 
 ```bash
-cd examples/python-mcp-example
+cd heimdall/tests
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ../../heimdall-python
-python main.py
+python test_python_sdk.py
 ```
 
-### JavaScript Example
+### JavaScript SDK Test
 
 ```bash
-cd examples/js-mcp-example
+cd heimdall/tests
 npm install
-npx tsx index.ts
+npm run test:js
 ```
 
 ## Architecture
@@ -164,6 +164,8 @@ npx tsx index.ts
 
 ## Need Help?
 
-- Check the SDK READMEs for detailed configuration options
-- View example code in the `examples/` directory
+- Check the SDK READMEs for detailed configuration options:
+  - [Python SDK](../heimdall-python/README.md)
+  - [JavaScript SDK](../heimdall-js/README.md)
+- View test code in the `heimdall/tests/` directory
 
