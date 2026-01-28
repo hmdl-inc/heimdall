@@ -17,6 +17,7 @@ import {
 interface TraceDetailPageProps {
   trace: Trace;
   onBack: () => void;
+  onUserClick?: (userId: string) => void;
 }
 
 // Generate mock spans for the trace tree
@@ -195,7 +196,7 @@ const SpanTreeItem: React.FC<SpanTreeItemProps> = ({ span, depth, selectedSpanId
   );
 };
 
-export const TraceDetailPage: React.FC<TraceDetailPageProps> = ({ trace, onBack }) => {
+export const TraceDetailPage: React.FC<TraceDetailPageProps> = ({ trace, onBack, onUserClick }) => {
   const [activeTab, setActiveTab] = useState<'preview' | 'scores'>('preview');
   const [copied, setCopied] = useState(false);
 
@@ -231,10 +232,16 @@ export const TraceDetailPage: React.FC<TraceDetailPageProps> = ({ trace, onBack 
               {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
             </button>
           </div>
-          <div className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-full text-sm text-blue-700">
+          <button 
+            onClick={() => onUserClick?.(trace.user_id)}
+            className={`flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-full text-sm text-blue-700 ${
+              onUserClick ? 'hover:bg-blue-100 cursor-pointer transition-colors' : ''
+            }`}
+            disabled={!onUserClick}
+          >
             <User className="w-3.5 h-3.5" />
             {trace.user_id}
-          </div>
+          </button>
           <StatusBadge status={trace.status} />
         </div>
 

@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { Project, Trace } from '../types';
 import { traceService } from '../services/traceService';
 import { Search, Filter, AlertCircle, CheckCircle2, XCircle, Clock, Loader2 } from 'lucide-react';
 import { TraceDetailPage } from './TraceDetailPage';
+import { UserDetailPage } from './UserDetailPage';
 
 interface TracingPageProps {
   project: Project;
@@ -33,12 +34,18 @@ const StatusBadge = ({ status }: { status: Trace['status'] }) => {
 
 const PAGE_SIZE = 50;
 
+interface UserData {
+  userId: string;
+  traces: Trace[];
+}
+
 export const TracingPage: React.FC<TracingPageProps> = ({ project }) => {
   const [traces, setTraces] = useState<Trace[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [displayLimit, setDisplayLimit] = useState(PAGE_SIZE);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [selectedTrace, setSelectedTrace] = useState<Trace | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -48,6 +55,25 @@ export const TracingPage: React.FC<TracingPageProps> = ({ project }) => {
     };
     loadTraces();
   }, [project.id]);
+
+  // Build user map for quick lookup
+  const userMap = useMemo(() => {
+    const map: Record<string, Trace[]> = {};
+    traces.forEach(t => {
+      if (!map[t.user_id]) map[t.user_id] = [];
+      map[t.user_id].push(t);
+    });
+    return map;
+  }, [traces]);
+
+  // Handle user click from trace detail
+  const handleUserClick = (userId: string) => {
+    const userTraces = userMap[userId];
+    if (userTraces) {
+      setSelectedTrace(null);
+      setSelectedUser({ userId, traces: userTraces });
+    }
+  };
 
   // Reset display limit when search term changes
   useEffect(() => {
@@ -92,12 +118,25 @@ export const TracingPage: React.FC<TracingPageProps> = ({ project }) => {
 
   const displayedTraces = filteredTraces.slice(0, displayLimit);
 
-  // Show detail page if a trace is selected
+  // Show trace detail page if a trace is selected
   if (selectedTrace) {
     return (
       <TraceDetailPage 
         trace={selectedTrace} 
-        onBack={() => setSelectedTrace(null)} 
+        onBack={() => setSelectedTrace(null)}
+        onUserClick={handleUserClick}
+      />
+    );
+  }
+
+  // Show user detail page if a user is selected
+  if (selectedUser) {
+    return (
+      <UserDetailPage
+        userId={selectedUser.userId}
+        traces={selectedUser.traces}
+        onBack={() => setSelectedUser(null)}
+        onTraceSelect={(trace) => setSelectedTrace(trace)}
       />
     );
   }
