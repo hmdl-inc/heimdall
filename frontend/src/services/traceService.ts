@@ -7,8 +7,9 @@ const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max 
 // Cache for traces to avoid repeated fetches
 let tracesCache: Record<string, Trace[]> = {};
 
-// Time range filter helper
+// Time range filter helper (hoursAgo = 0 means all time, no filtering)
 const filterByTimeRange = (traces: Trace[], hoursAgo: number): Trace[] => {
+  if (hoursAgo === 0) return traces;
   const cutoffTime = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
   return traces.filter(t => new Date(t.start_time) >= cutoffTime);
 };

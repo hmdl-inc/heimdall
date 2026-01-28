@@ -235,7 +235,7 @@ const SetupPage = ({ onSuccess, userId }: { onSuccess: () => void, userId: strin
 const DashboardHome = ({ project, timeRange }: { project: Project; timeRange: TimeRange }) => {
   const [stats, setStats] = useState<any>(null);
 
-  const timeRangeHours = TIME_RANGE_OPTIONS.find(t => t.value === timeRange)?.hours || 24;
+  const timeRangeHours = TIME_RANGE_OPTIONS.find(t => t.value === timeRange)?.hours ?? 0;
 
   useEffect(() => {
     const loadData = async () => {
@@ -427,7 +427,7 @@ const AppContainer = () => {
   const navigate = useNavigate();
 
   // Time range state
-  const [timeRange, setTimeRange] = useState<TimeRange>('1d');
+  const [timeRange, setTimeRange] = useState<TimeRange>('all');
 
   // Organizations & Projects lists
   const [organizations, setOrganizations] = useState<Organization[]>([]);

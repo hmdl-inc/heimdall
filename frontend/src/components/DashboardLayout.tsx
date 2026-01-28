@@ -25,13 +25,14 @@ import {
 import { User, Organization, Project } from '../types';
 
 // Time range options
-export type TimeRange = '1h' | '1d' | '3d' | '1w';
+export type TimeRange = 'all' | '1w' | '3d' | '1d' | '1h';
 
 export const TIME_RANGE_OPTIONS: { value: TimeRange; label: string; hours: number }[] = [
-  { value: '1h', label: 'Past 1 hour', hours: 1 },
-  { value: '1d', label: 'Past 1 day', hours: 24 },
-  { value: '3d', label: 'Past 3 days', hours: 72 },
+  { value: 'all', label: 'All time', hours: 0 },
   { value: '1w', label: 'Past 1 week', hours: 168 },
+  { value: '3d', label: 'Past 3 days', hours: 72 },
+  { value: '1d', label: 'Past 1 day', hours: 24 },
+  { value: '1h', label: 'Past 1 hour', hours: 1 },
 ];
 
 interface DashboardLayoutProps {
