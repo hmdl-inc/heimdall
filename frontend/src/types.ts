@@ -27,10 +27,25 @@ export enum AuthView {
   SIGNUP = 'SIGNUP',
 }
 
-export interface Trace {
-  trace_id: string;
+// Span represents a single unit of work within a trace
+export interface Span {
   span_id: string;
   parent_span_id?: string;
+  name: string;
+  type: 'TRACE' | 'SPAN' | 'GENERATION';
+  start_time: string; // ISO String
+  end_time: string;   // ISO String
+  latency_ms: number;
+  status: 'OK' | 'ERROR' | 'TIMEOUT' | 'CANCELLED';
+  error_type?: string;
+  input?: string;
+  output?: string;
+  metadata?: Record<string, string | number | boolean>;
+}
+
+// Trace represents a complete request with its child spans
+export interface Trace {
+  trace_id: string;
   name: string;
   start_time: string; // ISO String
   end_time: string;   // ISO String
@@ -46,5 +61,7 @@ export interface Trace {
   tool_version?: string;
   client_type: 'ChatGPT' | 'Claude' | 'Cursor' | 'Custom';
   region: string;
-  user_id: string; // Added to support 'Users' view
+  user_id: string;
+  // Child spans
+  spans: Span[];
 }

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Trace } from '../types';
+import { Trace, Span } from '../types';
 import { 
   ArrowLeft, 
   Copy, 
@@ -20,95 +20,30 @@ interface TraceDetailPageProps {
   onUserClick?: (userId: string) => void;
 }
 
-// Generate mock spans for the trace tree
-interface Span {
-  id: string;
-  name: string;
-  type: 'TRACE' | 'SPAN' | 'GENERATION';
-  latency_ms: number;
-  cost?: number;
-  tokens?: { input: number; output: number; total: number };
-  children: Span[];
-  input?: string;
-  output?: string;
-  metadata?: Record<string, string | number>;
+// Tree node structure for rendering
+interface SpanTreeNode {
+  span: Span;
+  children: SpanTreeNode[];
 }
 
-const generateMockSpans = (trace: Trace): Span => {
-  const rootSpan: Span = {
-    id: trace.trace_id,
-    name: trace.name.replace('_execution', ''),
-    type: 'TRACE',
-    latency_ms: trace.latency_ms,
-    cost: Math.random() * 0.01,
-    tokens: {
-      input: Math.floor(Math.random() * 5000) + 500,
-      output: Math.floor(Math.random() * 1000) + 100,
-      total: 0
-    },
-    children: [],
-    input: `Query: "What is the capital of France?"`,
-    output: `The capital of France is Paris. Paris is not only the capital but also the largest city in France, known for landmarks like the Eiffel Tower.`,
-    metadata: {
-      environment: trace.environment,
-      release: trace.release_id,
-      region: trace.region
-    }
-  };
-  rootSpan.tokens!.total = rootSpan.tokens!.input + rootSpan.tokens!.output;
+// Build tree structure from flat spans array
+const buildSpanTree = (spans: Span[]): SpanTreeNode | null => {
+  if (spans.length === 0) return null;
 
-  // Add child spans based on tool type
-  const childSpans: Span[] = [];
+  // Find root span (no parent or parent is the trace itself)
+  const rootSpan = spans.find(s => !s.parent_span_id) || spans[0];
   
-  if (trace.tool_name === 'retrieval' || trace.tool_name === 'search_tool') {
-    childSpans.push({
-      id: `${trace.span_id}-embed`,
-      name: 'prompt-embedding',
-      type: 'GENERATION',
-      latency_ms: Math.floor(trace.latency_ms * 0.2),
-      cost: 0.000001,
-      tokens: { input: 14, output: 0, total: 14 },
-      children: [],
-      input: 'Embed query text',
-      output: '[0.123, 0.456, ...]'
-    });
-    childSpans.push({
-      id: `${trace.span_id}-vec`,
-      name: 'vector-store',
-      type: 'SPAN',
-      latency_ms: Math.floor(trace.latency_ms * 0.3),
-      children: [],
-      input: 'Search vector DB',
-      output: '5 results found'
-    });
-    childSpans.push({
-      id: `${trace.span_id}-ctx`,
-      name: 'context-encoding',
-      type: 'SPAN',
-      latency_ms: Math.floor(trace.latency_ms * 0.15),
-      children: [],
-      input: 'Encode context',
-      output: 'Context encoded successfully'
-    });
-  }
+  const buildNode = (span: Span): SpanTreeNode => {
+    const children = spans
+      .filter(s => s.parent_span_id === span.span_id)
+      .map(buildNode);
+    return { span, children };
+  };
 
-  childSpans.push({
-    id: `${trace.span_id}-gen`,
-    name: 'generation',
-    type: 'GENERATION',
-    latency_ms: Math.floor(trace.latency_ms * 0.35),
-    cost: Math.random() * 0.005,
-    tokens: { input: 1200, output: 350, total: 1550 },
-    children: [],
-    input: 'Generate response based on context',
-    output: rootSpan.output
-  });
-
-  rootSpan.children = childSpans;
-  return rootSpan;
+  return buildNode(rootSpan);
 };
 
-const StatusBadge = ({ status }: { status: Trace['status'] }) => {
+const StatusBadge = ({ status }: { status: Span['status'] }) => {
   const styles = {
     OK: 'bg-green-100 text-green-700',
     ERROR: 'bg-red-100 text-red-700',
@@ -146,21 +81,22 @@ const TypeBadge = ({ type }: { type: Span['type'] }) => {
 };
 
 interface SpanTreeItemProps {
-  span: Span;
+  node: SpanTreeNode;
   depth: number;
   selectedSpanId: string | null;
   onSelect: (span: Span) => void;
 }
 
-const SpanTreeItem: React.FC<SpanTreeItemProps> = ({ span, depth, selectedSpanId, onSelect }) => {
+const SpanTreeItem: React.FC<SpanTreeItemProps> = ({ node, depth, selectedSpanId, onSelect }) => {
   const [isExpanded, setIsExpanded] = useState(true);
-  const hasChildren = span.children.length > 0;
+  const hasChildren = node.children.length > 0;
+  const { span } = node;
 
   return (
     <div>
       <div 
         className={`flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-slate-50 border-l-2 transition-colors ${
-          selectedSpanId === span.id ? 'bg-blue-50 border-l-blue-500' : 'border-l-transparent'
+          selectedSpanId === span.span_id ? 'bg-blue-50 border-l-blue-500' : 'border-l-transparent'
         }`}
         style={{ paddingLeft: `${depth * 16 + 12}px` }}
         onClick={() => onSelect(span)}
@@ -181,10 +117,10 @@ const SpanTreeItem: React.FC<SpanTreeItemProps> = ({ span, depth, selectedSpanId
       </div>
       {isExpanded && hasChildren && (
         <div>
-          {span.children.map(child => (
+          {node.children.map(child => (
             <SpanTreeItem 
-              key={child.id} 
-              span={child} 
+              key={child.span.span_id} 
+              node={child} 
               depth={depth + 1} 
               selectedSpanId={selectedSpanId}
               onSelect={onSelect}
@@ -200,8 +136,13 @@ export const TraceDetailPage: React.FC<TraceDetailPageProps> = ({ trace, onBack,
   const [activeTab, setActiveTab] = useState<'preview' | 'scores'>('preview');
   const [copied, setCopied] = useState(false);
 
-  const spanTree = useMemo(() => generateMockSpans(trace), [trace]);
-  const [selectedSpan, setSelectedSpan] = useState<Span>(spanTree);
+  // Build span tree from trace data
+  const spanTree = useMemo(() => buildSpanTree(trace.spans), [trace.spans]);
+  
+  // Initialize selected span to root span
+  const [selectedSpan, setSelectedSpan] = useState<Span>(
+    spanTree?.span || trace.spans[0]
+  );
 
   const copyTraceId = () => {
     navigator.clipboard.writeText(trace.trace_id);
@@ -298,10 +239,13 @@ export const TraceDetailPage: React.FC<TraceDetailPageProps> = ({ trace, onBack,
             <div className="flex items-center gap-3 mb-4">
               <TypeBadge type={selectedSpan.type} />
               <h3 className="text-lg font-semibold text-slate-900">{selectedSpan.name}</h3>
+              {selectedSpan.status !== 'OK' && (
+                <StatusBadge status={selectedSpan.status} />
+              )}
             </div>
 
             <div className="flex items-center gap-4 text-sm text-slate-500 mb-6">
-              <span>{new Date(trace.start_time).toLocaleString()}</span>
+              <span>{new Date(selectedSpan.start_time).toLocaleString()}</span>
               <span className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
                 Latency: {selectedSpan.latency_ms}ms
@@ -314,11 +258,14 @@ export const TraceDetailPage: React.FC<TraceDetailPageProps> = ({ trace, onBack,
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="text-sm font-medium text-slate-700">Input</h4>
-                    <button className="text-xs text-slate-400 hover:text-slate-600">
+                    <button 
+                      className="text-xs text-slate-400 hover:text-slate-600"
+                      onClick={() => navigator.clipboard.writeText(selectedSpan.input || '')}
+                    >
                       <Copy className="w-3.5 h-3.5" />
                     </button>
                   </div>
-                  <div className="bg-slate-50 rounded-lg p-4 font-mono text-sm text-slate-700 whitespace-pre-wrap">
+                  <div className="bg-slate-50 rounded-lg p-4 font-mono text-sm text-slate-700 whitespace-pre-wrap max-h-64 overflow-auto">
                     {selectedSpan.input || 'No input data'}
                   </div>
                 </div>
@@ -327,17 +274,20 @@ export const TraceDetailPage: React.FC<TraceDetailPageProps> = ({ trace, onBack,
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="text-sm font-medium text-slate-700">Output</h4>
-                    <button className="text-xs text-slate-400 hover:text-slate-600">
+                    <button 
+                      className="text-xs text-slate-400 hover:text-slate-600"
+                      onClick={() => navigator.clipboard.writeText(selectedSpan.output || '')}
+                    >
                       <Copy className="w-3.5 h-3.5" />
                     </button>
                   </div>
-                  <div className="bg-slate-50 rounded-lg p-4 font-mono text-sm text-slate-700 whitespace-pre-wrap">
+                  <div className="bg-slate-50 rounded-lg p-4 font-mono text-sm text-slate-700 whitespace-pre-wrap max-h-64 overflow-auto">
                     {selectedSpan.output || 'No output data'}
                   </div>
                 </div>
 
                 {/* Metadata */}
-                {selectedSpan.metadata && (
+                {selectedSpan.metadata && Object.keys(selectedSpan.metadata).length > 0 && (
                   <div>
                     <h4 className="text-sm font-medium text-slate-700 mb-2">Metadata</h4>
                     <div className="bg-slate-50 rounded-lg p-4">
@@ -372,14 +322,21 @@ export const TraceDetailPage: React.FC<TraceDetailPageProps> = ({ trace, onBack,
         <div className="w-80 bg-slate-50 overflow-auto">
           <div className="p-4 border-b border-slate-200 bg-white">
             <h3 className="text-sm font-medium text-slate-700">Trace Tree</h3>
+            <p className="text-xs text-slate-400 mt-1">{trace.spans.length} spans</p>
           </div>
           <div className="py-2">
-            <SpanTreeItem 
-              span={spanTree} 
-              depth={0} 
-              selectedSpanId={selectedSpan.id}
-              onSelect={setSelectedSpan}
-            />
+            {spanTree ? (
+              <SpanTreeItem 
+                node={spanTree} 
+                depth={0} 
+                selectedSpanId={selectedSpan.span_id}
+                onSelect={setSelectedSpan}
+              />
+            ) : (
+              <div className="px-4 py-8 text-center text-slate-500 text-sm">
+                No spans available
+              </div>
+            )}
           </div>
         </div>
       </div>
