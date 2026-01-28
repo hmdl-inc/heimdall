@@ -8,7 +8,6 @@ import {
   Users, 
   Settings, 
   LifeBuoy, 
-  Shield, 
   Search,
   SlidersHorizontal,
   ChevronDown,
@@ -168,7 +167,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col fixed h-full z-20">
         <div className="h-16 flex items-center px-6 border-b border-slate-100">
           <div className="flex items-center gap-2">
-            <Shield className="w-6 h-6 text-slate-900 fill-current" />
+            <img src="/logo.png" alt="Heimdall" className="w-8 h-8" />
             <span className="text-xl font-bold text-slate-900">Heimdall</span>
           </div>
         </div>

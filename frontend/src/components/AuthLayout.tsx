@@ -1,5 +1,4 @@
 import React from 'react';
-import { Shield } from 'lucide-react';
 
 interface AuthLayoutProps {
   title: string;
@@ -13,10 +12,8 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ title, subtitle, childre
       <div className="w-full max-w-[400px]">
         {/* Brand Header */}
         <div className="flex flex-col items-center mb-8">
-          <div className="flex items-center gap-2 mb-2">
-            <Shield className="w-8 h-8 text-primary-600 fill-current" />
-            <span className="text-2xl font-bold text-slate-900 tracking-tight">Heimdall</span>
-          </div>
+          <img src="/logo.png" alt="Heimdall" className="w-16 h-16 mb-3" />
+          <span className="text-2xl font-bold text-slate-900 tracking-tight">Heimdall</span>
         </div>
 
         {/* Card */}

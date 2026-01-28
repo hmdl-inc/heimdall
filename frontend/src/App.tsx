@@ -11,7 +11,7 @@ import { traceService } from './services/traceService';
 import { User, Organization, Project } from './types';
 import { Button } from './components/ui/Button';
 import { Input } from './components/ui/Input';
-import { Shield, Building2, Box, X } from 'lucide-react';
+import { Building2, Box, X } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // --- MODAL COMPONENT ---
@@ -160,7 +160,7 @@ const SetupPage = ({ onSuccess, userId }: { onSuccess: () => void, userId: strin
       <div className="w-full max-w-lg">
         <div className="flex justify-center mb-8">
             <div className="flex items-center gap-2">
-                <Shield className="w-8 h-8 text-primary-600" />
+                <img src="/logo.png" alt="Heimdall" className="w-8 h-8" />
                 <span className="text-2xl font-bold text-slate-900">Heimdall</span>
             </div>
         </div>
@@ -547,7 +547,7 @@ const AppContainer = () => {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center text-slate-500">
         <div className="animate-pulse flex flex-col items-center">
-          <Shield className="w-10 h-10 mb-4 text-slate-300" />
+          <img src="/logo.png" alt="Heimdall" className="w-10 h-10 mb-4 opacity-30" />
         </div>
       </div>
     );
