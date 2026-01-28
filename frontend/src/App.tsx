@@ -240,7 +240,6 @@ const DashboardHome = ({ project, timeRange }: { project: Project; timeRange: Ti
   useEffect(() => {
     const loadData = async () => {
       setStats(null); // Reset while loading
-      await traceService.ensureDummyData(project);
       const data = await traceService.getStats(project.id, timeRangeHours);
       setStats(data);
     };

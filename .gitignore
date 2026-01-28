@@ -1,12 +1,18 @@
 # Dependencies
 node_modules/
 
-# Environment
-.env.local
+# Environments
 .env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 
 # Data
-dummy-data/
+frontend/dummy-data/
+data/
 
 # Build outputs
 dist/
