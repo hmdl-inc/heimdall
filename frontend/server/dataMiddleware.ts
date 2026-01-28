@@ -32,9 +32,19 @@ const writeJsonFile = (fileName: string, data: any) => {
 export function dataMiddleware(): Connect.NextHandleFunction {
   return async (req, res, next) => {
     const url = req.url || '';
-    
+
     // Only handle /api routes
     if (!url.startsWith('/api/')) {
+      return next();
+    }
+
+    // Let /api/traces requests go through to the backend proxy
+    if (url.startsWith('/api/traces')) {
+      return next();
+    }
+
+    // Let /api/sdk-projects requests go through to the backend proxy
+    if (url.startsWith('/api/sdk-projects')) {
       return next();
     }
 
@@ -133,25 +143,7 @@ export function dataMiddleware(): Connect.NextHandleFunction {
       }
 
       // === TRACES ===
-      if (url.startsWith('/api/traces/') && req.method === 'GET') {
-        const projectId = url.split('/')[3]; // /api/traces/:projectId
-        const traces = readJsonFile('traces.json');
-        res.end(JSON.stringify(traces[projectId] || []));
-        return;
-      }
-
-      if (url === '/api/traces' && req.method === 'POST') {
-        let body = '';
-        req.on('data', chunk => { body += chunk; });
-        req.on('end', () => {
-          const traces = readJsonFile('traces.json');
-          const { projectId, data } = JSON.parse(body);
-          traces[projectId] = data;
-          writeJsonFile('traces.json', traces);
-          res.end(JSON.stringify({ success: true }));
-        });
-        return;
-      }
+      // Traces are now handled by the backend via proxy (see vite.config.ts)
 
       // Route not found
       res.statusCode = 404;

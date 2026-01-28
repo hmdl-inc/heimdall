@@ -52,14 +52,14 @@ export interface Trace {
   latency_ms: number;
   org_id: string;
   project_id: string;
-  environment: 'prod' | 'staging';
+  environment: 'prod' | 'staging' | 'development';
   release_id: string;
   status: 'OK' | 'ERROR' | 'TIMEOUT' | 'CANCELLED';
   error_type?: string;
   retry_count: number;
   tool_name?: string;
   tool_version?: string;
-  client_type: 'ChatGPT' | 'Claude' | 'Cursor' | 'Custom';
+  client_type: 'ChatGPT' | 'Claude' | 'Cursor' | 'Custom' | 'MCP';
   region: string;
   user_id: string;
   // Child spans
