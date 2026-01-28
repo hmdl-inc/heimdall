@@ -12,14 +12,14 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "icon": "book-open-cover",
-          "href": "https://mintlify.com/docs"
-        },
-        {
-          "anchor": "Blog",
+          "anchor": "Heimdall",
           "icon": "newspaper",
           "href": "https://mintlify.com/blog"
+        },
+        {
+          "anchor": "Github",
+          "icon": "book-open-cover",
+          "href": "https://mintlify.com/docs"
         }
       ]
     },
@@ -27,7 +27,6 @@
       {
         "tab": "Guides",
         "pages": [
-          "guides/overview",
           {
             "group": "Getting started",
             "pages": [
@@ -39,12 +38,17 @@
             "pages": [
               {
                 "group": "Observability",
-                "pages": []
+                "pages": [
+                  "guides/products/observability/untitled-page",
+                  "guides/products/observability/get-started",
+                  "guides/products/observability/features"
+                ]
               },
               "essentials/settings",
               "essentials/navigation"
             ]
-          }
+          },
+          "guides/overview"
         ]
       },
       {
