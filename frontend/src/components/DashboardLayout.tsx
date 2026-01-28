@@ -21,7 +21,8 @@ import {
   Building2,
   FolderKanban,
   Plus,
-  Check
+  Check,
+  LogOut
 } from 'lucide-react';
 import { User, Organization, Project } from '../types';
 
@@ -148,6 +149,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const [timeDropdownOpen, setTimeDropdownOpen] = useState(false);
   const [orgDropdownOpen, setOrgDropdownOpen] = useState(false);
   const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
   // Helper to determine Page Title
   const getPageTitle = (path: string) => {
@@ -207,17 +209,50 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
         {/* User Profile */}
         <div className="p-4 border-t border-slate-200">
-          <div className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors group">
-            <div className="w-8 h-8 rounded bg-primary-600 flex items-center justify-center text-white font-bold text-xs">
-              {user.name.substring(0, 2).toUpperCase()}
+          <div 
+            className="relative"
+            onMouseEnter={() => setUserDropdownOpen(true)}
+            onMouseLeave={() => setUserDropdownOpen(false)}
+          >
+            <div className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors group">
+              <div className="w-8 h-8 rounded bg-primary-600 flex items-center justify-center text-white font-bold text-xs">
+                {user.name.substring(0, 2).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-slate-900 truncate">{user.name}</p>
+                <p className="text-xs text-slate-500 truncate">{user.email}</p>
+              </div>
+              <div className="opacity-0 group-hover:opacity-100 p-1 rounded text-slate-500">
+                 <ChevronDown className={`w-4 h-4 transition-transform ${userDropdownOpen ? 'rotate-180' : ''}`} />
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-900 truncate">{user.name}</p>
-              <p className="text-xs text-slate-500 truncate">{user.email}</p>
-            </div>
-            <button onClick={onLogout} className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-200 rounded text-slate-500">
-               <ChevronDown className="w-4 h-4" />
-            </button>
+            
+            {/* User Dropdown Menu */}
+            {userDropdownOpen && (
+              <div className="absolute bottom-full left-0 right-0 mb-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 py-1">
+                <button
+                  onClick={() => {
+                    navigate('/dashboard/settings');
+                    setUserDropdownOpen(false);
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 text-slate-700"
+                >
+                  <Settings className="w-4 h-4 text-slate-500" />
+                  <span>Settings</span>
+                </button>
+                <div className="border-t border-slate-100 my-1" />
+                <button
+                  onClick={() => {
+                    onLogout();
+                    setUserDropdownOpen(false);
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 text-red-600"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Log out</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </aside>
