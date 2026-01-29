@@ -85,14 +85,46 @@ function determineSpanType(attrs: Record<string, string | number | boolean>, par
 }
 
 /**
+ * Extract input/output based on span kind
+ */
+function extractInputOutput(attrs: Record<string, string | number | boolean>): { input?: string; output?: string } {
+  const spanKind = attrs['heimdall.span_kind'] as string;
+
+  let input: string | undefined;
+  let output: string | undefined;
+
+  if (spanKind === 'mcp.tool') {
+    input = attrs['mcp.tool.arguments'] as string;
+    output = attrs['mcp.tool.result'] as string;
+  } else if (spanKind === 'mcp.resource') {
+    input = attrs['mcp.resource.arguments'] as string;
+    output = attrs['mcp.resource.result'] as string;
+  } else if (spanKind === 'mcp.prompt') {
+    input = attrs['mcp.prompt.arguments'] as string;
+    output = attrs['mcp.prompt.messages'] as string;
+  } else if (spanKind === 'internal') {
+    input = attrs['heimdall.input'] as string;
+    output = attrs['heimdall.output'] as string;
+  } else {
+    // Fallback to generic attributes
+    input = attrs['mcp.input'] as string || attrs['input'] as string;
+    output = attrs['mcp.output'] as string || attrs['output'] as string;
+  }
+
+  return { input, output };
+}
+
+/**
  * Transform a single OTLP span to Heimdall span
  */
 function transformSpan(otlpSpan: OTLPSpan): Span {
   const attrs = attributesToObject(otlpSpan.attributes);
-  const parentSpanId = otlpSpan.parentSpanId && otlpSpan.parentSpanId !== '' 
-    ? otlpSpan.parentSpanId 
+  const parentSpanId = otlpSpan.parentSpanId && otlpSpan.parentSpanId !== ''
+    ? otlpSpan.parentSpanId
     : undefined;
-  
+
+  const { input, output } = extractInputOutput(attrs);
+
   return {
     span_id: otlpSpan.spanId,
     parent_span_id: parentSpanId,
@@ -103,8 +135,8 @@ function transformSpan(otlpSpan: OTLPSpan): Span {
     latency_ms: calculateLatencyMs(otlpSpan.startTimeUnixNano, otlpSpan.endTimeUnixNano),
     status: mapStatus(otlpSpan.status),
     error_type: otlpSpan.status?.message,
-    input: attrs['mcp.input'] as string || attrs['input'] as string,
-    output: attrs['mcp.output'] as string || attrs['output'] as string,
+    input,
+    output,
     metadata: attrs,
   };
 }
