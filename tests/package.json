@@ -1,0 +1,17 @@
+{
+  "name": "heimdall-sdk-tests",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test:js": "tsx test_js_sdk.ts",
+    "test:py": "python test_python_sdk.py"
+  },
+  "dependencies": {
+    "hmdl": "file:../../heimdall-js"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "@types/node": "^20.10.0"
+  }
+}
+
