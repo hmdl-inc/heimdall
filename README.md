@@ -25,7 +25,15 @@ Heimdall is a comprehensive observability platform designed for monitoring Model
 - 🏠 **Self-hosted** - Run entirely on your own infrastructure
 - 📈 **OpenTelemetry Native** - Built on industry-standard observability protocols
 
+
+## TODO
+
+- [ ] **Track Users** - Associate traces with user identities for user-level analytics (currently all requests are shown as anonymous).
+- [ ] **Evaluate** - LLM evaluation and quality scoring, including human annotation.
+- [ ] **Add Cloud Host Server** - Managed cloud deployment.
+
 ## Architecture
+Currently we only support self-hosted deployment.  The architecture is as follows:
 
 ```
 ┌─────────────────┐     OTLP/HTTP      ┌─────────────────┐
