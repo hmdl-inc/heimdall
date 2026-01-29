@@ -74,9 +74,21 @@ export const storage = {
     );
     
     if (existingIndex >= 0) {
-      // Update existing trace (merge spans)
+      // Update existing trace (merge spans, deduplicate by span_id)
       const existing = tracesCache[projectId][existingIndex];
-      existing.spans = [...existing.spans, ...trace.spans];
+      const spansById = new Map<string, typeof existing.spans[number]>();
+      // Start with existing spans
+      for (const span of existing.spans) {
+        spansById.set(span.span_id, span);
+      }
+      // Add/overwrite with spans from the new trace
+      for (const span of trace.spans) {
+        spansById.set(span.span_id, span);
+      }
+      // Sort by start_time
+      existing.spans = Array.from(spansById.values()).sort(
+        (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+      );
       // Update end time if newer
       if (new Date(trace.end_time) > new Date(existing.end_time)) {
         existing.end_time = trace.end_time;

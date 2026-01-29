@@ -1,14 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  Home, 
-  LayoutDashboard, 
-  Activity, 
-  Clock, 
-  Users, 
-  Settings, 
-  LifeBuoy, 
-  Search,
+import {
+  Home,
+  LayoutDashboard,
+  Activity,
+  Clock,
+  Users,
+  Settings,
+  LifeBuoy,
   SlidersHorizontal,
   ChevronDown,
   Hammer,

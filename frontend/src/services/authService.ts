@@ -35,10 +35,10 @@ export const authService = {
       await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, ...newUser, password }),
+        body: JSON.stringify({ ...newUser, password }),
       });
 
-      logDbState('User Created', { email, ...newUser });
+      logDbState('User Created', newUser);
 
       // Save session to localStorage (session only)
       localStorage.setItem(SESSION_KEY, JSON.stringify(newUser));

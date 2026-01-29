@@ -178,7 +178,6 @@ export function transformOTLPToTraces(
 
   for (const resourceSpans of request.resourceSpans) {
     const resourceAttrs = getResourceAttrs(resourceSpans);
-    const serviceName = resourceAttrs['service.name'] as string || 'unknown-service';
     const environment = (resourceAttrs['heimdall.environment'] as string || 'development') as 'prod' | 'staging' | 'development';
     const projectIdFromResource = resourceAttrs['heimdall.project_id'] as string || defaultProjectId;
 
