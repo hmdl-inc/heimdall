@@ -6,6 +6,11 @@
 **Open Source Observability Platform for MCP Servers and AI Applications**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<a href="https://pypi.org/project/hmdl/"><img src="https://img.shields.io/pypi/dm/hmdl?logo=python&logoColor=white&label=pypi%20hmdl&color=blue" alt="hmdl pypi package"></a>
+<a href="https://www.npmjs.com/package/hmdl"><img src="https://img.shields.io/npm/dm/hmdl?logo=npm&logoColor=white&label=npm%20hmdl&color=blue" alt="hmdl npm package"></a>
+<a href="https://tryheimdall.com"><img src="https://img.shields.io/badge/website-tryheimdall.com-blue?logo=googlechrome&logoColor=white" alt="Heimdall Website"></a>
+<a href="https://docs.tryheimdall.com"><img src="https://img.shields.io/badge/docs-docs.tryheimdall.com-blue?logo=readthedocs&logoColor=white" alt="Heimdall Documentation"></a>
+
 
 </div>
 
@@ -84,8 +89,8 @@ Heimdall provides SDKs for instrumenting your MCP servers:
 
 | SDK | Package | Installation |
 |-----|---------|--------------|
-| Python | `hmdl` | `pip install -e ../heimdall-python` |
-| JavaScript/TypeScript | `hmdl` | `npm install ../heimdall-js` |
+| Python | [`hmdl`](https://pypi.org/project/hmdl/) | `pip install hmdl` |
+| JavaScript/TypeScript | [`hmdl`](https://www.npmjs.com/package/hmdl) | `npm install hmdl` |
 
 ### Python Example
 
@@ -173,6 +178,10 @@ const client = new HeimdallClient();
 | `HEIMDALL_SERVICE_NAME` | Service name in traces | `mcp-server` |
 | `HEIMDALL_ENVIRONMENT` | Environment tag | `development` |
 | `HEIMDALL_ENABLED` | Enable/disable tracing | `true` |
+| `HEIMDALL_API_KEY` | API key for authentication | - |
+| `HEIMDALL_DEBUG` | Enable debug logging | `false` |
+| `HEIMDALL_BATCH_SIZE` | Number of spans to batch | `100` |
+| `HEIMDALL_FLUSH_INTERVAL_MS` | Flush interval in ms | `5000` |
 
 ### Client Configuration Options
 
@@ -186,12 +195,22 @@ const client = new HeimdallClient();
 | API Key | `api_key` | `apiKey` | Optional API key |
 | Debug | `debug` | `debug` | Enable debug logging |
 
-### Wrapper Options (for `traceMCPTool`)
+### Wrapper/Decorator Options
+
+#### `trace_mcp_tool` / `traceMCPTool`
+
+| Option | Python | JavaScript | Description |
+|--------|--------|------------|-------------|
+| Name | `name` (arg) | `name` | Custom span name (defaults to function name) |
+| Parameter Names | N/A (automatic) | `paramNames` | Array of parameter names for input display |
+| Capture Input | N/A | `captureInput` | Whether to capture input arguments (default: true) |
+| Capture Output | N/A | `captureOutput` | Whether to capture return value (default: true) |
+
+#### `observe` (general-purpose)
 
 | Option | Python | JavaScript | Description |
 |--------|--------|------------|-------------|
 | Name | `name` | `name` | Custom span name (defaults to function name) |
-| Parameter Names | N/A (automatic) | `paramNames` | Array of parameter names for input display |
 | Capture Input | `capture_input` | `captureInput` | Whether to capture input arguments (default: true) |
 | Capture Output | `capture_output` | `captureOutput` | Whether to capture return value (default: true) |
 
@@ -226,13 +245,21 @@ npm run test:js
 
 ## Documentation
 
-- [Quick Start Guide](./QUICKSTART.md) - Get up and running in 5 minutes
-- [Python SDK README](../heimdall-python/README.md) - Python SDK documentation
-- [JavaScript SDK README](../heimdall-js/README.md) - JavaScript SDK documentation
+- 📖 [Full Documentation](https://docs.tryheimdall.com) - Comprehensive guides and API reference
+- 🚀 [Quick Start Guide](./QUICKSTART.md) - Get up and running in 5 minutes
+- 🐍 [Python SDK](https://pypi.org/project/hmdl/) - Python SDK on PyPI
+- 📦 [JavaScript SDK](https://www.npmjs.com/package/hmdl) - JavaScript/TypeScript SDK on npm
 
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Support & Contact
+
+- 📧 **Email**: [founder@tryheimdall.com](mailto:founder@tryheimdall.com)
+- 🌐 **Website**: [tryheimdall.com](https://tryheimdall.com)
+- 📖 **Documentation**: [docs.tryheimdall.com](https://docs.tryheimdall.com)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/hmdl-inc/heimdall/issues)
 
 ## License
 
