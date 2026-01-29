@@ -43,7 +43,7 @@ const searchTool = traceMCPTool(
     }));
     return { query, total_results: results.length, results };
   },
-  { name: "search-tool" }
+  { name: "search-tool", paramNames: ["query", "limit"] }
 );
 
 // Test MCP Tool - Calculator
@@ -57,7 +57,7 @@ const calculator = traceMCPTool(
       return { expression, error: String(e), status: "error" };
     }
   },
-  { name: "calculator" }
+  { name: "calculator", paramNames: ["expression"] }
 );
 
 // Test MCP Tool - Weather
@@ -71,7 +71,7 @@ const getWeather = traceMCPTool(
       humidity: Math.floor(Math.random() * 40) + 40
     };
   },
-  { name: "weather-tool" }
+  { name: "weather-tool", paramNames: ["city"] }
 );
 
 // Test MCP Tool - Translate
@@ -84,7 +84,7 @@ const translate = traceMCPTool(
       target_language: targetLang
     };
   },
-  { name: "translate-tool" }
+  { name: "translate-tool", paramNames: ["text", "target_language"] }
 );
 
 // Test MCP Tool - Summarize
@@ -98,7 +98,7 @@ const summarize = traceMCPTool(
       summary_length: summary.length
     };
   },
-  { name: "summarize-tool" }
+  { name: "summarize-tool", paramNames: ["content", "max_length"] }
 );
 
 async function main() {

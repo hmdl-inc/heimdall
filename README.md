@@ -102,12 +102,14 @@ client = HeimdallClient(
 )
 
 @trace_mcp_tool()
-def my_tool(query: str) -> dict:
-    return {"result": "success"}
+def search_tool(query: str, limit: int = 10) -> dict:
+    return {"results": [], "query": query, "limit": limit}
 
-result = my_tool("test")
+result = search_tool("test", limit=5)
 client.flush()
 ```
+
+> **Note**: Python SDK automatically captures parameter names using introspection. Inputs are displayed as named objects: `{"query": "test", "limit": 5}`.
 
 ### JavaScript/TypeScript Example
 
@@ -123,14 +125,16 @@ const client = new HeimdallClient({
   environment: "development"
 });
 
-const myTool = traceMCPTool(
-  async (query: string) => ({ result: "success" }),
-  { name: "my-tool" }
+const searchTool = traceMCPTool(
+  async (query: string, limit: number = 10) => ({ results: [], query, limit }),
+  { name: "search-tool", paramNames: ["query", "limit"] }
 );
 
-await myTool("test");
+await searchTool("test", 5);
 await client.flush();
 ```
+
+> **Note**: Use the `paramNames` option to display inputs as named objects (e.g., `{"query": "test", "limit": 5}`) instead of arrays (`["test", 5]`).
 
 ### Using Environment Variables
 
@@ -181,6 +185,15 @@ const client = new HeimdallClient();
 | Environment | `environment` | `environment` | Deployment environment |
 | API Key | `api_key` | `apiKey` | Optional API key |
 | Debug | `debug` | `debug` | Enable debug logging |
+
+### Wrapper Options (for `traceMCPTool`)
+
+| Option | Python | JavaScript | Description |
+|--------|--------|------------|-------------|
+| Name | `name` | `name` | Custom span name (defaults to function name) |
+| Parameter Names | N/A (automatic) | `paramNames` | Array of parameter names for input display |
+| Capture Input | `capture_input` | `captureInput` | Whether to capture input arguments (default: true) |
+| Capture Output | `capture_output` | `captureOutput` | Whether to capture return value (default: true) |
 
 ## Project Structure
 

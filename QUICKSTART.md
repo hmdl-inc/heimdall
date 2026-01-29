@@ -55,6 +55,7 @@ Set these environment variables:
 
 ```bash
 export HEIMDALL_ENDPOINT="http://localhost:4318"
+export HEIMDALL_ORG_ID="your-org-id"          # From Settings page
 export HEIMDALL_PROJECT_ID="your-project-id"  # From Settings page
 export HEIMDALL_ENABLED="true"
 ```
@@ -64,6 +65,7 @@ export HEIMDALL_ENABLED="true"
 ```python
 import os
 os.environ["HEIMDALL_ENDPOINT"] = "http://localhost:4318"
+os.environ["HEIMDALL_ORG_ID"] = "your-org-id"
 os.environ["HEIMDALL_PROJECT_ID"] = "your-project-id"
 os.environ["HEIMDALL_ENABLED"] = "true"
 
@@ -72,16 +74,18 @@ from hmdl import HeimdallClient, trace_mcp_tool
 client = HeimdallClient()
 
 @trace_mcp_tool()
-def my_mcp_tool(query: str) -> dict:
+def my_mcp_tool(query: str, limit: int = 10) -> dict:
     # Your tool logic here
-    return {"result": "success"}
+    return {"result": "success", "query": query, "limit": limit}
 
 # Run your tool
-result = my_mcp_tool("test query")
+result = my_mcp_tool("test query", limit=5)
 
 # Flush traces before exit
 client.flush()
 ```
+
+> **Note**: Python SDK automatically captures parameter names using introspection, so inputs are displayed as `{"query": "test query", "limit": 5}`.
 
 ### JavaScript Example
 
@@ -89,25 +93,28 @@ client.flush()
 import { HeimdallClient, traceMCPTool } from 'hmdl';
 
 process.env.HEIMDALL_ENDPOINT = "http://localhost:4318";
+process.env.HEIMDALL_ORG_ID = "your-org-id";
 process.env.HEIMDALL_PROJECT_ID = "your-project-id";
 process.env.HEIMDALL_ENABLED = "true";
 
 const client = new HeimdallClient();
 
 const myMCPTool = traceMCPTool(
-  async (query: string) => {
+  async (query: string, limit: number = 10) => {
     // Your tool logic here
-    return { result: "success" };
+    return { result: "success", query, limit };
   },
-  { name: "my-mcp-tool" }
+  { name: "my-mcp-tool", paramNames: ["query", "limit"] }
 );
 
 // Run your tool
-await myMCPTool("test query");
+await myMCPTool("test query", 5);
 
 // Flush traces before exit
 await client.flush();
 ```
+
+> **Note**: Use the `paramNames` option to display inputs as named objects (e.g., `{"query": "test query", "limit": 5}`) instead of arrays (`["test query", 5]`).
 
 ## 5. View Traces
 
