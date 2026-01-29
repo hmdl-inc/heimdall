@@ -12,6 +12,7 @@ venv.bak/
 
 # Data
 frontend/dummy-data/
+frontend/.vite
 data/
 
 # Build outputs
