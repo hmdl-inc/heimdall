@@ -1,0 +1,266 @@
+---
+title: 'SDK Options'
+description: 'Detailed reference for all SDK configuration options'
+---
+
+This page provides a complete reference for all configuration options available in the Heimdall SDKs.
+
+## Client Configuration
+
+### HeimdallClient Options
+
+These options are passed when initializing the `HeimdallClient`:
+
+| Option | Python | JavaScript | Type | Default | Description |
+|--------|--------|------------|------|---------|-------------|
+| Endpoint | `endpoint` | `endpoint` | string | `http://localhost:4318` | Heimdall backend URL |
+| Organization ID | `org_id` | `orgId` | string | `default` | Your organization ID |
+| Project ID | `project_id` | `projectId` | string | `default` | Your project ID |
+| Service Name | `service_name` | `serviceName` | string | `mcp-server` | Name of your service |
+| Environment | `environment` | `environment` | string | `development` | Deployment environment |
+| API Key | `api_key` | `apiKey` | string | - | Optional API key |
+| Debug | `debug` | `debug` | boolean | `false` | Enable debug logging |
+| Enabled | `enabled` | `enabled` | boolean | `true` | Enable/disable tracing |
+| Batch Size | `batch_size` | `batchSize` | number | `100` | Spans to batch |
+| Flush Interval | `flush_interval_ms` | `flushIntervalMs` | number | `5000` | Flush interval (ms) |
+
+### Python Example
+
+```python
+from hmdl import HeimdallClient
+
+client = HeimdallClient(
+    endpoint="http://localhost:4318",
+    org_id="my-organization",
+    project_id="my-project",
+    service_name="document-server",
+    environment="production",
+    api_key="optional-api-key",
+    debug=False,
+    enabled=True,
+    batch_size=100,
+    flush_interval_ms=5000
+)
+```
+
+### JavaScript Example
+
+```typescript
+import { HeimdallClient } from 'hmdl';
+
+const client = new HeimdallClient({
+  endpoint: "http://localhost:4318",
+  orgId: "my-organization",
+  projectId: "my-project",
+  serviceName: "document-server",
+  environment: "production",
+  apiKey: "optional-api-key",
+  debug: false,
+  enabled: true,
+  batchSize: 100,
+  flushIntervalMs: 5000
+});
+```
+
+## Tracing Decorator Options
+
+### trace_mcp_tool / traceMCPTool
+
+Options for the MCP tool tracing decorator:
+
+| Option | Python | JavaScript | Type | Default | Description |
+|--------|--------|------------|------|---------|-------------|
+| Name | `name` (positional) | `name` | string | function name | Custom span name |
+| Parameter Names | N/A | `paramNames` | string[] | - | Names for positional args |
+| Capture Input | N/A | `captureInput` | boolean | `true` | Whether to capture inputs |
+| Capture Output | N/A | `captureOutput` | boolean | `true` | Whether to capture outputs |
+
+<Note>
+Python SDK automatically captures parameter names using introspection, so `paramNames` is not needed.
+</Note>
+
+### Python Examples
+
+```python
+from hmdl import trace_mcp_tool
+
+# Basic usage - uses function name as span name
+@trace_mcp_tool()
+def search(query: str) -> dict:
+    return {"results": []}
+
+# Custom span name
+@trace_mcp_tool("document-search")
+def search(query: str) -> dict:
+    return {"results": []}
+```
+
+### JavaScript Examples
+
+```typescript
+import { traceMCPTool } from 'hmdl';
+
+// Basic usage
+const search = traceMCPTool(
+  async (query: string) => ({ results: [] }),
+  { name: "search" }
+);
+
+// With parameter names for better display
+const searchWithParams = traceMCPTool(
+  async (query: string, limit: number) => ({ results: [] }),
+  { 
+    name: "search",
+    paramNames: ["query", "limit"]
+  }
+);
+
+// Disable input/output capture for sensitive data
+const sensitiveOperation = traceMCPTool(
+  async (secretData: string) => true,
+  { 
+    name: "sensitive-op",
+    captureInput: false,
+    captureOutput: false
+  }
+);
+```
+
+### observe Options
+
+Options for the general-purpose tracing decorator:
+
+| Option | Python | JavaScript | Type | Default | Description |
+|--------|--------|------------|------|---------|-------------|
+| Name | `name` | `name` | string | function name | Custom span name |
+| Capture Input | `capture_input` | `captureInput` | boolean | `true` | Whether to capture inputs |
+| Capture Output | `capture_output` | `captureOutput` | boolean | `true` | Whether to capture outputs |
+
+### Python Examples
+
+```python
+from hmdl import observe
+
+# Basic usage
+@observe()
+def helper_function(data: str) -> str:
+    return data.upper()
+
+# Custom name
+@observe(name="data-processor")
+def process(data: str) -> str:
+    return data.upper()
+
+# Disable capture for sensitive data
+@observe(capture_input=False, capture_output=False)
+def handle_credentials(username: str, password: str) -> bool:
+    return authenticate(username, password)
+```
+
+### JavaScript Examples
+
+```typescript
+import { observe } from 'hmdl';
+
+// Basic usage
+const helperFunction = observe(
+  (data: string) => data.toUpperCase(),
+  { name: "helper-function" }
+);
+
+// Disable capture for sensitive data
+const handleCredentials = observe(
+  (username: string, password: string) => authenticate(username, password),
+  { 
+    name: "handle-credentials",
+    captureInput: false,
+    captureOutput: false
+  }
+);
+```
+
+## Client Methods
+
+### flush / flushAsync
+
+Force send all pending spans to the backend:
+
+<CodeGroup>
+```python Python
+# Synchronous flush
+client.flush()
+
+# Async flush
+await client.flush_async()
+```
+
+```typescript JavaScript
+// Always async
+await client.flush();
+```
+</CodeGroup>
+
+<Warning>
+Always call `flush()` before your application exits to ensure all traces are sent.
+</Warning>
+
+### shutdown
+
+Gracefully shutdown the client:
+
+<CodeGroup>
+```python Python
+client.shutdown()
+```
+
+```typescript JavaScript
+await client.shutdown();
+```
+</CodeGroup>
+
+## Advanced Configuration
+
+### Batching Behavior
+
+Spans are batched for efficient transmission:
+
+- Spans are collected until `batch_size` is reached OR `flush_interval_ms` elapses
+- Call `flush()` to immediately send all pending spans
+- Call `shutdown()` to flush and close the client
+
+### Debug Mode
+
+Enable debug mode to see detailed logging:
+
+```python
+client = HeimdallClient(debug=True)
+```
+
+This will log:
+- Span creation events
+- Batch transmission attempts
+- Errors and retries
+
+### Disabling Tracing
+
+Set `enabled=False` to completely disable tracing:
+
+```python
+client = HeimdallClient(enabled=False)
+```
+
+When disabled:
+- All decorators become no-ops
+- No data is sent to the backend
+- Minimal performance overhead
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Environment Variables" icon="gear" href="/guides/configuration/environment-variables">
+    Configure using environment variables.
+  </Card>
+  <Card title="Tracing Overview" icon="magnifying-glass" href="/guides/tracing/overview">
+    Learn how tracing works.
+  </Card>
+</CardGroup>

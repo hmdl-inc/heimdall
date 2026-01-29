@@ -1,0 +1,128 @@
+---
+title: 'Tracing Overview'
+description: 'Understanding how tracing works in Heimdall'
+---
+
+## What is Tracing?
+
+Tracing in Heimdall allows you to monitor and debug your MCP server operations by capturing detailed information about each tool call, resource access, and prompt execution.
+
+Each trace consists of one or more **spans** that represent units of work. Spans capture:
+
+- **Start and end times** for latency measurement
+- **Input parameters** passed to your functions
+- **Output values** returned from your functions
+- **Error information** if something goes wrong
+- **Custom attributes** for additional context
+
+## How It Works
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Your MCP Server                         │
+│                                                             │
+│   @trace_mcp_tool()                                        │
+│   def my_tool(query):     ──────┐                          │
+│       ...                        │ Span Created            │
+│       return result        ◄────┘                          │
+│                                                             │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+                           │ OTLP/HTTP (Port 4318)
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   Heimdall Backend                          │
+│                                                             │
+│   • Receives spans via OTLP protocol                       │
+│   • Transforms to Heimdall trace format                    │
+│   • Stores traces by project                               │
+│                                                             │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+                           │ REST API
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  Heimdall Dashboard                         │
+│                                                             │
+│   • View all traces                                        │
+│   • Analyze latency and errors                             │
+│   • Inspect inputs and outputs                             │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Trace Structure
+
+A typical Heimdall trace contains:
+
+| Field | Description |
+|-------|-------------|
+| `trace_id` | Unique identifier for the trace |
+| `span_id` | Unique identifier for each span |
+| `name` | Name of the operation (usually function name) |
+| `start_time` | When the operation started |
+| `end_time` | When the operation completed |
+| `duration` | Total time taken (calculated) |
+| `status` | Success or error status |
+| `input` | Captured input parameters |
+| `output` | Captured return value |
+| `attributes` | Custom metadata |
+
+## Tracing Decorators
+
+Heimdall provides specialized decorators for different use cases:
+
+### `trace_mcp_tool` / `traceMCPTool`
+
+Designed specifically for MCP tool functions. Automatically captures:
+- Tool name from function name
+- All input parameters
+- Return values
+- Execution duration
+- Error states
+
+### `observe`
+
+A general-purpose tracing decorator for any function:
+- More control over what gets captured
+- Can be used for non-MCP functions
+- Useful for tracing internal operations
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Trace at the Right Granularity">
+    - Trace your MCP tool entry points for high-level visibility
+    - Add internal tracing for complex operations that need debugging
+    - Avoid tracing very fast, frequently-called utility functions
+  </Accordion>
+
+  <Accordion title="Use Meaningful Names">
+    - Let the decorator use your function name when possible
+    - Override with custom names when the function name isn't descriptive
+    - Use consistent naming conventions across your codebase
+  </Accordion>
+
+  <Accordion title="Always Flush Before Exit">
+    - Call `client.flush()` before your application exits
+    - This ensures all pending spans are sent to the backend
+    - Especially important for short-lived processes
+  </Accordion>
+
+  <Accordion title="Handle Sensitive Data">
+    - Review what inputs/outputs are being captured
+    - Use `capture_input=False` or `capture_output=False` for sensitive data
+    - Consider sanitizing data before returning from traced functions
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Python SDK" icon="python" href="/guides/tracing/python-sdk">
+    Learn Python-specific tracing patterns.
+  </Card>
+  <Card title="JavaScript SDK" icon="js" href="/guides/tracing/javascript-sdk">
+    Learn JavaScript-specific tracing patterns.
+  </Card>
+</CardGroup>

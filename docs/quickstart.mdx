@@ -1,0 +1,176 @@
+---
+title: 'Quickstart'
+description: 'Get started with Heimdall observability for your MCP servers in 5 minutes'
+---
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- **Node.js 18+** (for running Heimdall backend and frontend)
+- **Python 3.9+** (if using the Python SDK)
+
+## Step 1: Start the Heimdall Stack
+
+First, clone the Heimdall repository and start the backend and frontend servers.
+
+<AccordionGroup>
+  <Accordion icon="server" title="Start the Backend Server (Port 4318)">
+    The backend server receives OTLP traces from your instrumented applications.
+
+    ```bash
+    cd backend
+    npm install
+    npm run dev
+    ```
+
+    You should see:
+    ```
+    ╔═══════════════════════════════════════════════════════════╗
+    ║                    HEIMDALL BACKEND                       ║
+    ║                                                           ║
+    ║  OTLP Endpoint:  http://localhost:4318/v1/traces          ║
+    ║  API Endpoint:   http://localhost:4318/api                ║
+    ║  Health Check:   http://localhost:4318/health             ║
+    ║                                                           ║
+    ║  Ready to receive traces from SDKs!                       ║
+    ╚═══════════════════════════════════════════════════════════╝
+    ```
+  </Accordion>
+
+  <Accordion icon="desktop" title="Start the Frontend Dashboard (Port 5173)">
+    The frontend provides a beautiful dashboard for viewing your traces.
+
+    ```bash
+    cd frontend
+    npm install
+    npm run dev
+    ```
+
+    Open [http://localhost:5173](http://localhost:5173) in your browser.
+  </Accordion>
+</AccordionGroup>
+
+## Step 2: Create Your Workspace
+
+<Steps>
+  <Step title="Create an Account">
+    Navigate to [http://localhost:5173](http://localhost:5173) and sign up with your email and password.
+  </Step>
+  <Step title="Create an Organization">
+    Organizations group your projects together. Give it a name like "My Company" or "Personal".
+  </Step>
+  <Step title="Create a Project">
+    Each project has a unique ID for trace collection. Create one for each service you want to monitor.
+  </Step>
+  <Step title="Get Your IDs">
+    Go to **Settings** to find your **Organization ID** and **Project ID**. You'll need these to configure the SDK.
+  </Step>
+</Steps>
+
+## Step 3: Install the SDK
+
+Choose your language and install the Heimdall SDK:
+
+<CodeGroup>
+```bash Python
+pip install hmdl
+```
+
+```bash JavaScript/TypeScript
+npm install hmdl
+```
+</CodeGroup>
+
+## Step 4: Instrument Your Code
+
+Add tracing to your MCP server with just a few lines of code:
+
+<CodeGroup>
+```python Python
+from hmdl import HeimdallClient, trace_mcp_tool
+
+# Initialize the client
+client = HeimdallClient(
+    endpoint="http://localhost:4318",
+    org_id="your-org-id",           # From Settings page
+    project_id="your-project-id",   # From Settings page
+    service_name="my-mcp-server",
+    environment="development"
+)
+
+# Decorate your MCP tools
+@trace_mcp_tool()
+def search_tool(query: str, limit: int = 10) -> dict:
+    # Your tool logic here
+    return {"results": [], "query": query, "limit": limit}
+
+# Run your tool
+result = search_tool("test query", limit=5)
+
+# Flush traces before exit
+client.flush()
+```
+
+```typescript JavaScript/TypeScript
+import { HeimdallClient, traceMCPTool } from 'hmdl';
+
+// Initialize the client
+const client = new HeimdallClient({
+  endpoint: "http://localhost:4318",
+  orgId: "your-org-id",           // From Settings page
+  projectId: "your-project-id",   // From Settings page
+  serviceName: "my-mcp-server",
+  environment: "development"
+});
+
+// Wrap your MCP tools
+const searchTool = traceMCPTool(
+  async (query: string, limit: number = 10) => {
+    // Your tool logic here
+    return { results: [], query, limit };
+  },
+  { name: "search-tool", paramNames: ["query", "limit"] }
+);
+
+// Run your tool
+await searchTool("test query", 5);
+
+// Flush traces before exit
+await client.flush();
+```
+</CodeGroup>
+
+<Tip>
+**Python SDK** automatically captures parameter names using introspection.
+
+**JavaScript SDK** requires the `paramNames` option to display inputs as named objects instead of arrays.
+</Tip>
+
+## Step 5: View Your Traces
+
+1. Go to the Heimdall dashboard at [http://localhost:5173](http://localhost:5173)
+2. Navigate to **Settings** → **Link SDK Project**
+3. Click **Link** next to your SDK project to view its traces
+4. Go to **Tracing** to see all your traces
+
+<Check>
+**Congratulations!** You've successfully set up Heimdall observability for your MCP server.
+</Check>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Python SDK Guide" icon="python" href="/guides/tracing/python-sdk">
+    Deep dive into Python SDK features and best practices.
+  </Card>
+  <Card title="JavaScript SDK Guide" icon="js" href="/guides/tracing/javascript-sdk">
+    Deep dive into JavaScript SDK features and best practices.
+  </Card>
+  <Card title="Environment Variables" icon="gear" href="/guides/configuration/environment-variables">
+    Configure Heimdall using environment variables.
+  </Card>
+  <Card title="SDK Options" icon="sliders" href="/guides/configuration/sdk-options">
+    Explore all available SDK configuration options.
+  </Card>
+</CardGroup>

@@ -1,0 +1,93 @@
+---
+title: 'Introduction'
+description: 'Open Source Observability Platform for MCP Servers and AI Applications'
+---
+
+## What is Heimdall?
+
+Heimdall is a comprehensive observability platform designed for monitoring Model Context Protocol (MCP) servers and AI/LLM applications. Built on OpenTelemetry standards, it provides real-time tracing, metrics, and insights into your AI infrastructure.
+
+<img
+  className="block dark:hidden"
+  src="/images/hero-light.png"
+  alt="Heimdall Dashboard"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/hero-dark.png"
+  alt="Heimdall Dashboard"
+/>
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Real-time Tracing" icon="magnifying-glass">
+    Track every tool call, resource access, and prompt execution in your MCP servers with detailed span information.
+  </Card>
+  <Card title="Dashboard Analytics" icon="chart-line">
+    Visualize latency, error rates, and usage patterns with an intuitive dashboard interface.
+  </Card>
+  <Card title="Easy Integration" icon="plug">
+    Simple SDK decorators for Python and JavaScript/TypeScript. Just wrap your functions and start tracing.
+  </Card>
+  <Card title="Self-hosted" icon="server">
+    Run entirely on your own infrastructure. Your data never leaves your servers.
+  </Card>
+</CardGroup>
+
+## OpenTelemetry Native
+
+Heimdall is built on industry-standard OpenTelemetry protocols. This means:
+
+- **Compatibility**: Works with any OTLP-compatible tooling
+- **Future-proof**: Based on CNCF-backed observability standards
+- **Extensible**: Easy to integrate with existing observability stacks
+
+## Architecture
+
+Heimdall uses a simple but powerful architecture:
+
+```
+┌─────────────────┐     OTLP/HTTP      ┌─────────────────┐
+│   MCP Server    │ ──────────────────▶│  Heimdall       │
+│   + SDK         │    Port 4318       │  Backend        │
+└─────────────────┘                    └────────┬────────┘
+                                                │
+                                                │ REST API
+                                                │
+                                       ┌────────▼────────┐
+                                       │  Heimdall       │
+                                       │  Frontend       │
+                                       │  Port 5173      │
+                                       └─────────────────┘
+```
+
+1. **Your MCP Server**: Instrumented with the Heimdall SDK (Python or JavaScript)
+2. **Heimdall Backend**: Receives OTLP traces and stores them
+3. **Heimdall Frontend**: Beautiful dashboard for viewing and analyzing traces
+
+## SDKs
+
+Heimdall provides official SDKs for instrumenting your MCP servers:
+
+| SDK | Package | Installation |
+|-----|---------|--------------|
+| Python | [`hmdl`](https://pypi.org/project/hmdl/) | `pip install hmdl` |
+| JavaScript/TypeScript | [`hmdl`](https://www.npmjs.com/package/hmdl) | `npm install hmdl` |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get up and running with Heimdall in 5 minutes.
+  </Card>
+  <Card title="Python SDK" icon="python" href="/guides/tracing/python-sdk">
+    Learn how to instrument your Python MCP servers.
+  </Card>
+  <Card title="JavaScript SDK" icon="js" href="/guides/tracing/javascript-sdk">
+    Learn how to instrument your Node.js MCP servers.
+  </Card>
+  <Card title="Configuration" icon="gear" href="/guides/configuration/environment-variables">
+    Configure Heimdall for your environment.
+  </Card>
+</CardGroup>

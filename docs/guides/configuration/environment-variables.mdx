@@ -1,0 +1,221 @@
+---
+title: 'Environment Variables'
+description: 'Configure Heimdall using environment variables'
+---
+
+Heimdall SDKs can be fully configured using environment variables. This is the recommended approach for production deployments.
+
+## Available Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `HEIMDALL_ENDPOINT` | Backend OTLP endpoint URL | `http://localhost:4318` |
+| `HEIMDALL_ORG_ID` | Organization ID from dashboard | `default` |
+| `HEIMDALL_PROJECT_ID` | Project ID for trace grouping | `default` |
+| `HEIMDALL_SERVICE_NAME` | Service name in traces | `mcp-server` |
+| `HEIMDALL_ENVIRONMENT` | Environment tag (e.g., production, staging) | `development` |
+| `HEIMDALL_ENABLED` | Enable/disable tracing | `true` |
+| `HEIMDALL_API_KEY` | API key for authentication (optional) | - |
+| `HEIMDALL_DEBUG` | Enable debug logging | `false` |
+| `HEIMDALL_BATCH_SIZE` | Number of spans to batch before sending | `100` |
+| `HEIMDALL_FLUSH_INTERVAL_MS` | Flush interval in milliseconds | `5000` |
+
+## Configuration Examples
+
+### Basic Setup
+
+Set the required environment variables:
+
+```bash
+export HEIMDALL_ENDPOINT="http://localhost:4318"
+export HEIMDALL_ORG_ID="my-organization"
+export HEIMDALL_PROJECT_ID="my-project"
+export HEIMDALL_ENABLED="true"
+```
+
+Then initialize the client without arguments:
+
+<CodeGroup>
+```python Python
+from hmdl import HeimdallClient
+
+client = HeimdallClient()
+```
+
+```typescript JavaScript
+import { HeimdallClient } from 'hmdl';
+
+const client = new HeimdallClient();
+```
+</CodeGroup>
+
+### Production Setup
+
+For production environments, include service name and environment:
+
+```bash
+export HEIMDALL_ENDPOINT="https://heimdall.yourcompany.com:4318"
+export HEIMDALL_ORG_ID="production-org"
+export HEIMDALL_PROJECT_ID="api-service"
+export HEIMDALL_SERVICE_NAME="api-service"
+export HEIMDALL_ENVIRONMENT="production"
+export HEIMDALL_ENABLED="true"
+```
+
+### Development Setup
+
+For local development with debug logging:
+
+```bash
+export HEIMDALL_ENDPOINT="http://localhost:4318"
+export HEIMDALL_ORG_ID="dev-org"
+export HEIMDALL_PROJECT_ID="dev-project"
+export HEIMDALL_SERVICE_NAME="my-mcp-server"
+export HEIMDALL_ENVIRONMENT="development"
+export HEIMDALL_DEBUG="true"
+export HEIMDALL_ENABLED="true"
+```
+
+### Disable Tracing
+
+To completely disable tracing (useful for tests):
+
+```bash
+export HEIMDALL_ENABLED="false"
+```
+
+When disabled, all tracing decorators become no-ops and no data is sent.
+
+## Using .env Files
+
+### Python with python-dotenv
+
+```python
+# .env file
+HEIMDALL_ENDPOINT=http://localhost:4318
+HEIMDALL_ORG_ID=my-org
+HEIMDALL_PROJECT_ID=my-project
+HEIMDALL_SERVICE_NAME=my-mcp-server
+HEIMDALL_ENVIRONMENT=development
+HEIMDALL_ENABLED=true
+```
+
+```python
+from dotenv import load_dotenv
+from hmdl import HeimdallClient
+
+load_dotenv()  # Load .env file
+
+client = HeimdallClient()
+```
+
+### Node.js with dotenv
+
+```bash
+# .env file
+HEIMDALL_ENDPOINT=http://localhost:4318
+HEIMDALL_ORG_ID=my-org
+HEIMDALL_PROJECT_ID=my-project
+HEIMDALL_SERVICE_NAME=my-mcp-server
+HEIMDALL_ENVIRONMENT=development
+HEIMDALL_ENABLED=true
+```
+
+```typescript
+import 'dotenv/config';
+import { HeimdallClient } from 'hmdl';
+
+const client = new HeimdallClient();
+```
+
+## Priority Order
+
+Configuration values are resolved in the following order (highest priority first):
+
+1. **Explicit arguments** passed to `HeimdallClient()`
+2. **Environment variables**
+3. **Default values**
+
+This means you can override specific settings while using environment variables for the rest:
+
+```python
+# Uses HEIMDALL_ENDPOINT from environment, but overrides service_name
+client = HeimdallClient(service_name="custom-service")
+```
+
+## Docker Configuration
+
+When running in Docker, pass environment variables using `-e` flags or an env file:
+
+```bash
+docker run -e HEIMDALL_ENDPOINT=http://host.docker.internal:4318 \
+           -e HEIMDALL_ORG_ID=my-org \
+           -e HEIMDALL_PROJECT_ID=my-project \
+           my-mcp-server
+```
+
+Or with docker-compose:
+
+```yaml
+version: '3'
+services:
+  mcp-server:
+    image: my-mcp-server
+    environment:
+      - HEIMDALL_ENDPOINT=http://heimdall-backend:4318
+      - HEIMDALL_ORG_ID=my-org
+      - HEIMDALL_PROJECT_ID=my-project
+      - HEIMDALL_SERVICE_NAME=mcp-server
+      - HEIMDALL_ENVIRONMENT=production
+```
+
+## Kubernetes Configuration
+
+Use ConfigMaps and Secrets for Kubernetes deployments:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: heimdall-config
+data:
+  HEIMDALL_ENDPOINT: "http://heimdall-backend.monitoring:4318"
+  HEIMDALL_ENVIRONMENT: "production"
+  HEIMDALL_ENABLED: "true"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: heimdall-secrets
+type: Opaque
+stringData:
+  HEIMDALL_ORG_ID: "my-org"
+  HEIMDALL_PROJECT_ID: "my-project"
+  HEIMDALL_API_KEY: "secret-api-key"
+```
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: mcp-server
+        envFrom:
+        - configMapRef:
+            name: heimdall-config
+        - secretRef:
+            name: heimdall-secrets
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="SDK Options" icon="sliders" href="/guides/configuration/sdk-options">
+    Explore programmatic configuration options.
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get started with Heimdall.
+  </Card>
+</CardGroup>
