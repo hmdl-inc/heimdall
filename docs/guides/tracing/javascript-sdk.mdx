@@ -1,0 +1,248 @@
+---
+title: 'JavaScript SDK'
+description: 'Instrument your Node.js MCP servers with the Heimdall SDK'
+---
+
+## Installation
+
+Install the Heimdall JavaScript SDK from npm:
+
+```bash
+npm install hmdl
+```
+
+Or with yarn:
+
+```bash
+yarn add hmdl
+```
+
+## Basic Usage
+
+### Initialize the Client
+
+```typescript
+import { HeimdallClient, traceMCPTool } from 'hmdl';
+
+// Initialize with explicit configuration
+const client = new HeimdallClient({
+  endpoint: "http://localhost:4318",
+  orgId: "your-org-id",
+  projectId: "your-project-id",
+  serviceName: "my-mcp-server",
+  environment: "development"
+});
+```
+
+<Tip>
+You can also configure the client using [environment variables](/guides/configuration/environment-variables) and initialize without arguments:
+
+```typescript
+const client = new HeimdallClient();
+```
+</Tip>
+
+### Trace MCP Tools
+
+Use `traceMCPTool` to wrap your MCP tool functions:
+
+```typescript
+const searchDocuments = traceMCPTool(
+  async (query: string, limit: number = 10) => {
+    const results = await performSearch(query, limit);
+    return {
+      results,
+      query,
+      total: results.length
+    };
+  },
+  { 
+    name: "search-documents",
+    paramNames: ["query", "limit"]
+  }
+);
+
+// Call your tool normally
+const result = await searchDocuments("machine learning", 5);
+```
+
+<Warning>
+**Important:** Unlike Python, JavaScript cannot introspect parameter names at runtime. Use the `paramNames` option to display inputs as named objects:
+
+- With `paramNames`: `{"query": "machine learning", "limit": 5}`
+- Without `paramNames`: `["machine learning", 5]`
+</Warning>
+
+### Flush Traces
+
+Always flush traces before your application exits:
+
+```typescript
+// At the end of your application
+await client.flush();
+```
+
+## Configuration Options
+
+The `traceMCPTool` function accepts the following options:
+
+```typescript
+const myTool = traceMCPTool(
+  async (arg1: string, arg2: number) => {
+    return { result: "data" };
+  },
+  {
+    name: "my-tool",           // Custom span name (required)
+    paramNames: ["arg1", "arg2"], // Parameter names for display
+    captureInput: true,        // Capture input arguments (default: true)
+    captureOutput: true        // Capture return value (default: true)
+  }
+);
+```
+
+## General Tracing with `observe`
+
+For non-MCP functions or when you need more control:
+
+```typescript
+import { observe } from 'hmdl';
+
+const fetchUser = observe(
+  async (userId: string) => {
+    // Fetch user from database
+    return { id: userId, name: "John" };
+  },
+  { name: "fetch-user-data" }
+);
+
+const processPayment = observe(
+  async (cardNumber: string, amount: number) => {
+    // Process payment
+    return true;
+  },
+  { 
+    name: "process-payment",
+    captureOutput: false  // Don't capture sensitive output
+  }
+);
+```
+
+## Error Handling
+
+Errors are automatically captured and the span is marked as failed:
+
+```typescript
+const riskyOperation = traceMCPTool(
+  async (data: string) => {
+    if (!data) {
+      throw new Error("Data cannot be empty");
+    }
+    return { processed: data };
+  },
+  { name: "risky-operation", paramNames: ["data"] }
+);
+
+try {
+  await riskyOperation("");
+} catch (error) {
+  // Error is captured in the trace
+}
+
+await client.flush();  // Don't forget to flush!
+```
+
+## Complete Example
+
+Here's a complete example of an MCP server instrumented with Heimdall:
+
+```typescript
+import { HeimdallClient, traceMCPTool, observe } from 'hmdl';
+
+// Configure via environment variables
+process.env.HEIMDALL_ENDPOINT = "http://localhost:4318";
+process.env.HEIMDALL_ORG_ID = "my-org";
+process.env.HEIMDALL_PROJECT_ID = "my-project";
+
+// Initialize client
+const client = new HeimdallClient({
+  serviceName: "document-mcp-server",
+  environment: "production"
+});
+
+// Your MCP tools
+const searchDocuments = traceMCPTool(
+  async (query: string, limit: number = 10) => {
+    const results = await db.search(query, limit);
+    return { results, count: results.length };
+  },
+  { name: "search-documents", paramNames: ["query", "limit"] }
+);
+
+const getDocument = traceMCPTool(
+  async (docId: string) => {
+    const doc = await db.get(docId);
+    if (!doc) {
+      throw new Error(`Document ${docId} not found`);
+    }
+    return doc;
+  },
+  { name: "get-document", paramNames: ["docId"] }
+);
+
+const createDocument = traceMCPTool(
+  async (title: string, content: string) => {
+    const doc = await db.create({ title, content });
+    return { id: doc.id, created: true };
+  },
+  { name: "create-document", paramNames: ["title", "content"] }
+);
+
+// Internal helper with tracing
+const validateQuery = observe(
+  (query: string): boolean => {
+    return query.length >= 3;
+  },
+  { name: "validate-query" }
+);
+
+// Main execution
+async function main() {
+  try {
+    // Run your MCP server logic
+    const result = await searchDocuments("test query", 5);
+    console.log(result);
+  } finally {
+    // Always flush before exit
+    await client.flush();
+  }
+}
+
+main();
+```
+
+## TypeScript Support
+
+The SDK is written in TypeScript and provides full type definitions. Your traced functions maintain their original type signatures:
+
+```typescript
+// Type inference works correctly
+const search = traceMCPTool(
+  async (query: string, limit: number): Promise<SearchResult> => {
+    // ...
+  },
+  { name: "search", paramNames: ["query", "limit"] }
+);
+
+// search is typed as: (query: string, limit: number) => Promise<SearchResult>
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Environment Variables" icon="gear" href="/guides/configuration/environment-variables">
+    Configure Heimdall using environment variables.
+  </Card>
+  <Card title="SDK Options" icon="sliders" href="/guides/configuration/sdk-options">
+    Explore all available configuration options.
+  </Card>
+</CardGroup>

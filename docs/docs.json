@@ -1,24 +1,24 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Heimdall",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#3B82F6",
+    "light": "#60A5FA",
+    "dark": "#1D4ED8"
   },
   "favicon": "/favicon.svg",
   "navigation": {
     "global": {
       "anchors": [
         {
-          "anchor": "Heimdall",
-          "icon": "newspaper",
+          "anchor": "Website",
+          "icon": "globe",
           "href": "https://tryheimdall.com"
         },
         {
-          "anchor": "Github",
-          "icon": "book-open-cover",
+          "anchor": "GitHub",
+          "icon": "github",
           "href": "https://github.com/hmdl-inc/heimdall"
         }
       ]
@@ -28,45 +28,36 @@
         "tab": "Guides",
         "pages": [
           {
-            "group": "Getting started",
+            "group": "Getting Started",
             "pages": [
+              "guides/introduction",
               "quickstart"
             ]
           },
           {
-            "group": "Products",
+            "group": "Tracing",
             "pages": [
-              {
-                "group": "Observability",
-                "pages": [
-                  "guides/products/observability/untitled-page",
-                  "guides/products/observability/get-started",
-                  "guides/products/observability/features"
-                ]
-              },
-              "essentials/settings",
-              "essentials/navigation"
+              "guides/tracing/overview",
+              "guides/tracing/python-sdk",
+              "guides/tracing/javascript-sdk"
             ]
           },
-          "guides/overview"
+          {
+            "group": "Configuration",
+            "pages": [
+              "guides/configuration/environment-variables",
+              "guides/configuration/sdk-options"
+            ]
+          }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "API Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "API Documentation",
             "pages": [
               "api-reference/introduction"
-            ]
-          },
-          {
-            "group": "Endpoint examples",
-            "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
             ]
           }
         ]
@@ -81,32 +72,18 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "href": "mailto:founder@tryheimdall.com"
       }
     ],
     "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+      "type": "github",
+      "href": "https://github.com/hmdl-inc/heimdall"
     }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "github": "https://github.com/hmdl-inc/heimdall",
+      "website": "https://tryheimdall.com"
     }
   }
 }

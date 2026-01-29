@@ -1,0 +1,200 @@
+---
+title: 'Python SDK'
+description: 'Instrument your Python MCP servers with the Heimdall SDK'
+---
+
+## Installation
+
+Install the Heimdall Python SDK from PyPI:
+
+```bash
+pip install hmdl
+```
+
+## Basic Usage
+
+### Initialize the Client
+
+```python
+from hmdl import HeimdallClient, trace_mcp_tool
+
+# Initialize with explicit configuration
+client = HeimdallClient(
+    endpoint="http://localhost:4318",
+    org_id="your-org-id",
+    project_id="your-project-id",
+    service_name="my-mcp-server",
+    environment="development"
+)
+```
+
+<Tip>
+You can also configure the client using [environment variables](/guides/configuration/environment-variables) and initialize without arguments:
+
+```python
+client = HeimdallClient()
+```
+</Tip>
+
+### Trace MCP Tools
+
+Use the `@trace_mcp_tool()` decorator to automatically trace your MCP tool functions:
+
+```python
+@trace_mcp_tool()
+def search_documents(query: str, limit: int = 10) -> dict:
+    """Search for documents matching the query."""
+    results = perform_search(query, limit)
+    return {
+        "results": results,
+        "query": query,
+        "total": len(results)
+    }
+
+# Call your tool normally
+result = search_documents("machine learning", limit=5)
+```
+
+The decorator automatically captures:
+- Function name as the span name
+- All parameters with their names (`{"query": "machine learning", "limit": 5}`)
+- Return value
+- Execution duration
+- Any exceptions that occur
+
+### Custom Span Names
+
+Override the default function name with a custom span name:
+
+```python
+@trace_mcp_tool("document-search")
+def search(query: str) -> dict:
+    return {"results": []}
+```
+
+### Flush Traces
+
+Always flush traces before your application exits:
+
+```python
+# At the end of your application
+client.flush()
+```
+
+## General Tracing with `observe`
+
+For non-MCP functions or when you need more control, use the `observe` decorator:
+
+```python
+from hmdl import observe
+
+@observe(name="fetch-user-data")
+def fetch_user(user_id: str) -> dict:
+    # Fetch user from database
+    return {"id": user_id, "name": "John"}
+
+@observe(capture_output=False)  # Don't capture sensitive output
+def process_payment(card_number: str, amount: float) -> bool:
+    # Process payment
+    return True
+```
+
+## Async Support
+
+Both decorators work with async functions:
+
+```python
+@trace_mcp_tool()
+async def async_search(query: str) -> dict:
+    results = await async_perform_search(query)
+    return {"results": results}
+
+# Async flush
+await client.flush_async()
+```
+
+## Error Handling
+
+Errors are automatically captured and the span is marked as failed:
+
+```python
+@trace_mcp_tool()
+def risky_operation(data: str) -> dict:
+    if not data:
+        raise ValueError("Data cannot be empty")
+    return {"processed": data}
+
+try:
+    result = risky_operation("")
+except ValueError:
+    pass  # Error is captured in the trace
+
+client.flush()  # Don't forget to flush!
+```
+
+## Complete Example
+
+Here's a complete example of an MCP server instrumented with Heimdall:
+
+```python
+import os
+from hmdl import HeimdallClient, trace_mcp_tool, observe
+
+# Configure via environment variables
+os.environ["HEIMDALL_ENDPOINT"] = "http://localhost:4318"
+os.environ["HEIMDALL_ORG_ID"] = "my-org"
+os.environ["HEIMDALL_PROJECT_ID"] = "my-project"
+
+# Initialize client
+client = HeimdallClient(
+    service_name="document-mcp-server",
+    environment="production"
+)
+
+# Your MCP tools
+@trace_mcp_tool()
+def search_documents(query: str, limit: int = 10) -> dict:
+    """Search for documents."""
+    results = db.search(query, limit)
+    return {"results": results, "count": len(results)}
+
+@trace_mcp_tool()
+def get_document(doc_id: str) -> dict:
+    """Retrieve a specific document."""
+    doc = db.get(doc_id)
+    if not doc:
+        raise ValueError(f"Document {doc_id} not found")
+    return doc
+
+@trace_mcp_tool()
+def create_document(title: str, content: str) -> dict:
+    """Create a new document."""
+    doc = db.create(title=title, content=content)
+    return {"id": doc.id, "created": True}
+
+# Internal helper with tracing
+@observe(name="validate-query")
+def validate_query(query: str) -> bool:
+    return len(query) >= 3
+
+# Main execution
+if __name__ == "__main__":
+    try:
+        # Run your MCP server logic
+        result = search_documents("test query", limit=5)
+        print(result)
+    finally:
+        # Always flush before exit
+        client.flush()
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Environment Variables" icon="gear" href="/guides/configuration/environment-variables">
+    Configure Heimdall using environment variables.
+  </Card>
+  <Card title="SDK Options" icon="sliders" href="/guides/configuration/sdk-options">
+    Explore all available configuration options.
+  </Card>
+</CardGroup>

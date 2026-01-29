@@ -1,33 +1,52 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: 'API Reference'
+description: 'Heimdall API documentation'
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+<Info>
+**Coming Soon**
 
-## Welcome
+The Heimdall REST API documentation is currently under development. 
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+In the meantime, you can explore the backend source code to understand the available endpoints.
+</Info>
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+## Current Endpoints
 
-## Authentication
+The Heimdall backend currently exposes the following endpoints:
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+### OTLP Receiver
 
-```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/v1/traces` | Receive OTLP traces from SDKs |
+
+### REST API
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/health` | Health check endpoint |
+| `GET` | `/api/traces/:projectId` | Get all traces for a project |
+| `GET` | `/api/traces/:projectId/:traceId` | Get a specific trace |
+| `DELETE` | `/api/traces/:projectId` | Clear traces for a project |
+| `GET` | `/api/projects` | Get all projects with traces |
+
+## SDK Integration
+
+For instrumenting your applications, we recommend using the official SDKs instead of calling the API directly:
+
+<CardGroup cols={2}>
+  <Card title="Python SDK" icon="python" href="/guides/tracing/python-sdk">
+    Install with `pip install hmdl`
+  </Card>
+  <Card title="JavaScript SDK" icon="js" href="/guides/tracing/javascript-sdk">
+    Install with `npm install hmdl`
+  </Card>
+</CardGroup>
+
+## Need Help?
+
+If you have questions about the API, please reach out:
+
+- **Email**: [founder@tryheimdall.com](mailto:founder@tryheimdall.com)
+- **GitHub Issues**: [github.com/hmdl-inc/heimdall/issues](https://github.com/hmdl-inc/heimdall/issues)
