@@ -26,7 +26,7 @@ os.environ["HEIMDALL_SERVICE_NAME"] = "python-sdk-test"
 os.environ["HEIMDALL_ENVIRONMENT"] = "test"
 
 # Import the SDK
-from hmdl import HeimdallClient, trace_mcp_tool, trace_mcp_resource, trace_mcp_prompt, observe
+from hmdl import HeimdallClient, trace_mcp_tool
 
 # Initialize the client
 client = HeimdallClient()
@@ -40,9 +40,9 @@ print(f"Service: {client.config.service_name}")
 print()
 
 
-@trace_mcp_tool(name="test-search-tool")
+@trace_mcp_tool(name="search-tool")
 def search_tool(query: str, limit: int = 10) -> dict:
-    """Test search tool."""
+    """Search tool for finding documents."""
     time.sleep(random.uniform(0.05, 0.15))
     results = [
         {"id": i, "title": f"Result {i} for '{query}'", "score": random.uniform(0.7, 1.0)}
@@ -51,9 +51,9 @@ def search_tool(query: str, limit: int = 10) -> dict:
     return {"query": query, "total_results": len(results), "results": results}
 
 
-@trace_mcp_tool(name="test-calculator")
+@trace_mcp_tool(name="calculator")
 def calculator(expression: str) -> dict:
-    """Test calculator tool."""
+    """Calculator tool for evaluating expressions."""
     time.sleep(random.uniform(0.03, 0.1))
     try:
         result = eval(expression)
@@ -62,28 +62,39 @@ def calculator(expression: str) -> dict:
         return {"expression": expression, "error": str(e), "status": "error"}
 
 
-@trace_mcp_resource(name="test-file-reader")
-def read_file(uri: str) -> str:
-    """Test file reader resource."""
-    time.sleep(random.uniform(0.03, 0.1))
-    return f"Content of file: {uri}"
-
-
-@trace_mcp_prompt(name="test-code-gen")
-def generate_prompt(language: str, task: str) -> list:
-    """Test prompt generator."""
-    time.sleep(random.uniform(0.02, 0.05))
-    return [
-        {"role": "system", "content": f"You are an expert {language} programmer."},
-        {"role": "user", "content": f"Write {language} code to: {task}"}
-    ]
-
-
-@observe(name="test-process-data")
-def process_data(data: dict) -> dict:
-    """Test data processing."""
+@trace_mcp_tool(name="weather-tool")
+def get_weather(city: str) -> dict:
+    """Weather tool for getting weather information."""
     time.sleep(random.uniform(0.05, 0.1))
-    return {"original": data, "processed_at": time.time(), "status": "processed"}
+    return {
+        "city": city,
+        "temperature": random.randint(15, 30),
+        "condition": random.choice(["sunny", "cloudy", "rainy"]),
+        "humidity": random.randint(40, 80)
+    }
+
+
+@trace_mcp_tool(name="translate-tool")
+def translate(text: str, target_lang: str) -> dict:
+    """Translation tool for translating text."""
+    time.sleep(random.uniform(0.05, 0.1))
+    return {
+        "original": text,
+        "translated": f"[{target_lang}] {text}",
+        "target_language": target_lang
+    }
+
+
+@trace_mcp_tool(name="summarize-tool")
+def summarize(content: str, max_length: int = 100) -> dict:
+    """Summarization tool for summarizing content."""
+    time.sleep(random.uniform(0.05, 0.1))
+    summary = content[:max_length] + "..." if len(content) > max_length else content
+    return {
+        "original_length": len(content),
+        "summary": summary,
+        "summary_length": len(summary)
+    }
 
 
 def main():
@@ -91,11 +102,11 @@ def main():
     operations = [
         ("Search Tool", lambda: search_tool("test query", limit=3)),
         ("Calculator", lambda: calculator("10 * 5 + 2")),
-        ("File Reader", lambda: read_file("file://test/readme.md")),
-        ("Prompt Generator", lambda: generate_prompt("Python", "sort list")),
-        ("Process Data", lambda: process_data({"test": "data"})),
+        ("Weather Tool", lambda: get_weather("San Francisco")),
+        ("Translate Tool", lambda: translate("Hello world", "es")),
+        ("Summarize Tool", lambda: summarize("This is a long text that needs to be summarized.", 20)),
     ]
-    
+
     success_count = 0
     for name, operation in operations:
         print(f"Running: {name}...")
@@ -106,12 +117,12 @@ def main():
         except Exception as e:
             print(f"  ✗ Error: {e}")
         print()
-    
+
     # Flush traces
     print("Flushing traces...")
     client.flush()
     time.sleep(1)
-    
+
     print()
     print("=" * 60)
     print(f"Test completed! {success_count}/{len(operations)} operations succeeded.")

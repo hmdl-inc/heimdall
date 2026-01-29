@@ -1,6 +1,6 @@
 /**
  * Test script for Heimdall JavaScript SDK integration with backend and frontend.
- * 
+ *
  * Usage:
  *   cd heimdall/tests
  *   npm install
@@ -17,7 +17,7 @@ process.env.HEIMDALL_PROJECT_ID = PROJECT_ID;
 process.env.HEIMDALL_SERVICE_NAME = "js-sdk-test";
 process.env.HEIMDALL_ENVIRONMENT = "test";
 
-import { HeimdallClient, traceMCPTool, traceMCPResource, traceMCPPrompt, observe } from "hmdl";
+import { HeimdallClient, traceMCPTool } from "hmdl";
 
 // Initialize the client
 const client = new HeimdallClient();
@@ -43,7 +43,7 @@ const searchTool = traceMCPTool(
     }));
     return { query, total_results: results.length, results };
   },
-  { name: "test-search-tool" }
+  { name: "search-tool" }
 );
 
 // Test MCP Tool - Calculator
@@ -57,46 +57,57 @@ const calculator = traceMCPTool(
       return { expression, error: String(e), status: "error" };
     }
   },
-  { name: "test-calculator" }
+  { name: "calculator" }
 );
 
-// Test MCP Resource - File Reader
-const readFile = traceMCPResource(
-  async (uri: string) => {
+// Test MCP Tool - Weather
+const getWeather = traceMCPTool(
+  async (city: string) => {
     await randomDelay();
-    return `Content of file: ${uri}`;
+    return {
+      city,
+      temperature: Math.floor(Math.random() * 15) + 15,
+      condition: ["sunny", "cloudy", "rainy"][Math.floor(Math.random() * 3)],
+      humidity: Math.floor(Math.random() * 40) + 40
+    };
   },
-  { name: "test-file-reader" }
+  { name: "weather-tool" }
 );
 
-// Test MCP Prompt - Code Generator
-const generatePrompt = traceMCPPrompt(
-  async (language: string, task: string) => {
+// Test MCP Tool - Translate
+const translate = traceMCPTool(
+  async (text: string, targetLang: string) => {
     await randomDelay();
-    return [
-      { role: "system", content: `You are an expert ${language} programmer.` },
-      { role: "user", content: `Write ${language} code to: ${task}` }
-    ];
+    return {
+      original: text,
+      translated: `[${targetLang}] ${text}`,
+      target_language: targetLang
+    };
   },
-  { name: "test-code-gen" }
+  { name: "translate-tool" }
 );
 
-// Test nested operation
-const processData = observe(
-  async (data: Record<string, unknown>) => {
+// Test MCP Tool - Summarize
+const summarize = traceMCPTool(
+  async (content: string, maxLength: number = 100) => {
     await randomDelay();
-    return { original: data, processed_at: Date.now(), status: "processed" };
+    const summary = content.length > maxLength ? content.slice(0, maxLength) + "..." : content;
+    return {
+      original_length: content.length,
+      summary,
+      summary_length: summary.length
+    };
   },
-  { name: "test-process-data" }
+  { name: "summarize-tool" }
 );
 
 async function main() {
   const operations = [
     { name: "Search Tool", fn: () => searchTool("test query", 3) },
     { name: "Calculator", fn: () => calculator("10 * 5 + 2") },
-    { name: "File Reader", fn: () => readFile("file://test/readme.md") },
-    { name: "Prompt Generator", fn: () => generatePrompt("TypeScript", "sort list") },
-    { name: "Process Data", fn: () => processData({ test: "data" }) },
+    { name: "Weather Tool", fn: () => getWeather("San Francisco") },
+    { name: "Translate Tool", fn: () => translate("Hello world", "es") },
+    { name: "Summarize Tool", fn: () => summarize("This is a long text that needs to be summarized.", 20) },
   ];
 
   let successCount = 0;
