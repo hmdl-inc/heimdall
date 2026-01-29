@@ -48,13 +48,16 @@ export const TracingPage: React.FC<TracingPageProps> = ({ project }) => {
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
+  // Use linkedTraceProjectId if available, otherwise use project.id
+  const traceProjectId = project.linkedTraceProjectId || project.id;
+
   useEffect(() => {
     const loadTraces = async () => {
-      const data = await traceService.getTraces(project.id);
+      const data = await traceService.getTraces(traceProjectId);
       setTraces(data);
     };
     loadTraces();
-  }, [project.id]);
+  }, [traceProjectId]);
 
   // Build user map for quick lookup
   const userMap = useMemo(() => {

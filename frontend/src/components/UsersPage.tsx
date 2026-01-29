@@ -29,9 +29,12 @@ export const UsersPage: React.FC<UsersPageProps> = ({ project }) => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
+  // Use linkedTraceProjectId if available, otherwise use project.id
+  const traceProjectId = project.linkedTraceProjectId || project.id;
+
   useEffect(() => {
     const loadUsers = async () => {
-      const traces = await traceService.getTraces(project.id);
+      const traces = await traceService.getTraces(traceProjectId);
       const userMap: Record<string, { traces: Trace[] }> = {};
 
       traces.forEach(t => {
@@ -61,7 +64,7 @@ export const UsersPage: React.FC<UsersPageProps> = ({ project }) => {
       setUsers(stats.sort((a, b) => new Date(b.lastEvent).getTime() - new Date(a.lastEvent).getTime()));
     };
     loadUsers();
-  }, [project.id]);
+  }, [traceProjectId]);
 
   // Reset display limit when search term changes
   useEffect(() => {

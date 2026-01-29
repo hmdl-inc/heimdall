@@ -236,15 +236,17 @@ const DashboardHome = ({ project, timeRange }: { project: Project; timeRange: Ti
   const [stats, setStats] = useState<any>(null);
 
   const timeRangeHours = TIME_RANGE_OPTIONS.find(t => t.value === timeRange)?.hours ?? 0;
+  // Use linkedTraceProjectId if available, otherwise use project.id
+  const traceProjectId = project.linkedTraceProjectId || project.id;
 
   useEffect(() => {
     const loadData = async () => {
       setStats(null); // Reset while loading
-      const data = await traceService.getStats(project.id, timeRangeHours);
+      const data = await traceService.getStats(traceProjectId, timeRangeHours);
       setStats(data);
     };
     loadData();
-  }, [project, timeRangeHours]);
+  }, [traceProjectId, timeRangeHours]);
 
   if (!stats) return <div className="p-10 text-center text-slate-500">Loading metrics...</div>;
 

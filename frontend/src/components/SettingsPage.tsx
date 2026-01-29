@@ -66,8 +66,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ userId, project, onU
   const handleLinkSDKProject = (sdkProjectId: string) => {
     localStorage.setItem(`heimdall_linked_sdk_${project.id}`, sdkProjectId);
     setLinkedSDKProjectId(sdkProjectId);
-    // Update the project's ID to use the SDK project ID for fetching traces
-    const updatedProject = { ...project, id: sdkProjectId };
+    // Update the project's linkedTraceProjectId for fetching traces (keeps original id stable)
+    const updatedProject = { ...project, linkedTraceProjectId: sdkProjectId };
     onUpdateProject(updatedProject);
   };
 

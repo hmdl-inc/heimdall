@@ -14,6 +14,8 @@ export interface Project {
   id: string;
   name: string;
   organizationId: string;
+  /** Optional linked SDK project ID for fetching traces from a different project */
+  linkedTraceProjectId?: string;
 }
 
 export interface AuthResponse {
