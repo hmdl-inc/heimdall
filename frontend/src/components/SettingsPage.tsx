@@ -3,7 +3,7 @@ import { Project } from '../types';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { authService } from '../services/authService';
-import { Trash2, Copy, Plus } from 'lucide-react';
+import { Trash2, Copy, Plus, Link, RefreshCw } from 'lucide-react';
 
 interface SettingsPageProps {
   userId: string;
@@ -19,6 +19,12 @@ interface ApiKey {
   secretKey: string;
 }
 
+interface SDKProject {
+  id: string;
+  name: string;
+  traceCount: number;
+}
+
 export const SettingsPage: React.FC<SettingsPageProps> = ({ userId, project, onUpdateProject }) => {
   // --- Project Name State ---
   const [projectName, setProjectName] = useState(project.name);
@@ -26,6 +32,44 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ userId, project, onU
 
   // --- API Keys State ---
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
+
+  // --- SDK Projects State ---
+  const [sdkProjects, setSdkProjects] = useState<SDKProject[]>([]);
+  const [isLoadingSDKProjects, setIsLoadingSDKProjects] = useState(false);
+  const [linkedSDKProjectId, setLinkedSDKProjectId] = useState<string | null>(null);
+
+  // Load SDK projects from backend
+  const loadSDKProjects = async () => {
+    setIsLoadingSDKProjects(true);
+    try {
+      const response = await fetch('/api/sdk-projects');
+      if (response.ok) {
+        const data = await response.json();
+        setSdkProjects(data);
+      }
+    } catch (error) {
+      console.error('Failed to load SDK projects:', error);
+    }
+    setIsLoadingSDKProjects(false);
+  };
+
+  // Load linked SDK project from localStorage
+  useEffect(() => {
+    const linked = localStorage.getItem(`heimdall_linked_sdk_${project.id}`);
+    if (linked) {
+      setLinkedSDKProjectId(linked);
+    }
+    loadSDKProjects();
+  }, [project.id]);
+
+  // Link SDK project to current project
+  const handleLinkSDKProject = (sdkProjectId: string) => {
+    localStorage.setItem(`heimdall_linked_sdk_${project.id}`, sdkProjectId);
+    setLinkedSDKProjectId(sdkProjectId);
+    // Update the project's linkedTraceProjectId for fetching traces (keeps original id stable)
+    const updatedProject = { ...project, linkedTraceProjectId: sdkProjectId };
+    onUpdateProject(updatedProject);
+  };
 
   // Load API keys from local storage on mount
   useEffect(() => {
@@ -102,19 +146,127 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ userId, project, onU
             Your Project is currently named <span className="font-semibold text-slate-900">'{project.name}'</span>
           </p>
           <div className="space-y-4">
-            <Input 
-              label="Project Name" 
+            <Input
+              label="Project Name"
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
             />
-            <Button 
-              onClick={handleSaveProject} 
+            <Button
+              onClick={handleSaveProject}
               isLoading={isSavingProject}
               variant="secondary"
             >
               Save
             </Button>
           </div>
+        </div>
+      </section>
+
+      {/* 2.5 SDK Configuration Section */}
+      <section className="space-y-4">
+        <h2 className="text-xl font-bold text-slate-900">SDK Configuration</h2>
+        <div className="max-w-xl bg-white p-6 border border-slate-200 rounded-lg shadow-sm">
+          <p className="text-sm text-slate-500 mb-4">
+            Use these settings when configuring the Heimdall SDK in your MCP server.
+          </p>
+
+          {/* Project ID Display */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-slate-700 mb-1">Project ID</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                readOnly
+                value={project.id}
+                className="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-md text-slate-700 font-mono text-sm"
+              />
+              <button
+                onClick={() => navigator.clipboard.writeText(project.id)}
+                className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                title="Copy to clipboard"
+              >
+                <Copy className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* SDK Config Preview */}
+          <div className="bg-slate-900 rounded-lg p-4 font-mono text-sm overflow-x-auto">
+            <div className="text-slate-400 select-none mb-1"># Environment Variables</div>
+            <div className="space-y-1">
+              <div className="flex flex-wrap">
+                <span className="text-blue-400">HEIMDALL_ENDPOINT</span>
+                <span className="text-slate-500 mx-2">=</span>
+                <span className="text-green-400">{window.location.protocol}//{window.location.hostname}:4318</span>
+              </div>
+              <div className="flex flex-wrap">
+                <span className="text-blue-400">HEIMDALL_PROJECT_ID</span>
+                <span className="text-slate-500 mx-2">=</span>
+                <span className="text-green-400">{project.id}</span>
+              </div>
+              <div className="flex flex-wrap">
+                <span className="text-blue-400">HEIMDALL_ENABLED</span>
+                <span className="text-slate-500 mx-2">=</span>
+                <span className="text-green-400">true</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 2.6 Link SDK Project Section */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-slate-900">Link SDK Project</h2>
+          <button
+            onClick={loadSDKProjects}
+            disabled={isLoadingSDKProjects}
+            className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+            title="Refresh SDK projects"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoadingSDKProjects ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
+        <div className="max-w-xl bg-white p-6 border border-slate-200 rounded-lg shadow-sm">
+          <p className="text-sm text-slate-500 mb-4">
+            If you already have an SDK sending traces with a different project ID, you can link it here to view those traces.
+          </p>
+
+          {sdkProjects.length === 0 ? (
+            <div className="text-sm text-slate-500 py-4 text-center border border-dashed border-slate-300 rounded-lg">
+              {isLoadingSDKProjects ? 'Loading...' : 'No SDK projects found. Start sending traces from your SDK to see them here.'}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {sdkProjects.map((sdkProject) => (
+                <div
+                  key={sdkProject.id}
+                  className={`flex items-center justify-between p-3 border rounded-lg transition-colors ${
+                    linkedSDKProjectId === sdkProject.id || project.id === sdkProject.id
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-slate-200 hover:border-blue-300'
+                  }`}
+                >
+                  <div>
+                    <div className="font-mono text-sm text-slate-700">{sdkProject.id}</div>
+                    <div className="text-xs text-slate-500">{sdkProject.traceCount} traces</div>
+                  </div>
+                  <button
+                    onClick={() => handleLinkSDKProject(sdkProject.id)}
+                    disabled={linkedSDKProjectId === sdkProject.id || project.id === sdkProject.id}
+                    className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded transition-colors ${
+                      linkedSDKProjectId === sdkProject.id || project.id === sdkProject.id
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-slate-100 text-slate-700 hover:bg-blue-100 hover:text-blue-700'
+                    }`}
+                  >
+                    <Link className="w-3 h-3" />
+                    {linkedSDKProjectId === sdkProject.id || project.id === sdkProject.id ? 'Linked' : 'Link'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

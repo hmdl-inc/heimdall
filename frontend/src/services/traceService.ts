@@ -315,16 +315,9 @@ export const traceService = {
     // Sort by date descending
     traces.sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime());
 
-    // Save to file
-    await fetch('/api/traces', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ projectId: project.id, data: traces }),
-    });
-
-    // Update cache
+    // Update cache (dummy data is for local demo only, not persisted to backend)
     tracesCache[project.id] = traces;
-    
+
     console.log(`✅ Generated 300 dummy traces with spans for project ${project.name}`);
   },
 

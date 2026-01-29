@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { Trace, Span } from '../types';
-import { 
-  ArrowLeft, 
-  Copy, 
-  CheckCircle2, 
-  AlertCircle, 
-  Clock, 
+import {
+  ArrowLeft,
+  Copy,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
   XCircle,
   ChevronRight,
   ChevronDown,
@@ -13,6 +13,7 @@ import {
   Tag,
   User
 } from 'lucide-react';
+import { JsonViewer } from './ui/JsonViewer';
 
 interface TraceDetailPageProps {
   trace: Trace;
@@ -255,36 +256,10 @@ export const TraceDetailPage: React.FC<TraceDetailPageProps> = ({ trace, onBack,
             {activeTab === 'preview' ? (
               <div className="space-y-6">
                 {/* Input */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-medium text-slate-700">Input</h4>
-                    <button 
-                      className="text-xs text-slate-400 hover:text-slate-600"
-                      onClick={() => navigator.clipboard.writeText(selectedSpan.input || '')}
-                    >
-                      <Copy className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg p-4 font-mono text-sm text-slate-700 whitespace-pre-wrap max-h-64 overflow-auto">
-                    {selectedSpan.input || 'No input data'}
-                  </div>
-                </div>
+                <JsonViewer data={selectedSpan.input} label="Input" />
 
                 {/* Output */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-medium text-slate-700">Output</h4>
-                    <button 
-                      className="text-xs text-slate-400 hover:text-slate-600"
-                      onClick={() => navigator.clipboard.writeText(selectedSpan.output || '')}
-                    >
-                      <Copy className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg p-4 font-mono text-sm text-slate-700 whitespace-pre-wrap max-h-64 overflow-auto">
-                    {selectedSpan.output || 'No output data'}
-                  </div>
-                </div>
+                <JsonViewer data={selectedSpan.output} label="Output" />
 
                 {/* Metadata */}
                 {selectedSpan.metadata && Object.keys(selectedSpan.metadata).length > 0 && (
