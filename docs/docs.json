@@ -14,12 +14,12 @@
         {
           "anchor": "Heimdall",
           "icon": "newspaper",
-          "href": "https://mintlify.com/blog"
+          "href": "https://tryheimdall.com"
         },
         {
           "anchor": "Github",
           "icon": "book-open-cover",
-          "href": "https://mintlify.com/docs"
+          "href": "https://github.com/hmdl-inc/heimdall"
         }
       ]
     },
