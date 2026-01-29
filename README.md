@@ -63,9 +63,20 @@ npm install
 npm run dev
 ```
 
-### 3. Open the Dashboard
+### 3. Create Organization and Project
 
-Navigate to http://localhost:5173 and create an account.
+1. Navigate to http://localhost:5173
+2. **Create an account** with your email and password
+3. **Create an Organization** - this groups your projects together
+4. **Create a Project** - each project has a unique ID for trace collection
+
+### 4. Get Your Configuration
+
+After creating your organization and project, go to **Settings** to find:
+- **Organization ID** - Your organization identifier
+- **Project ID** - Your project identifier
+
+You'll need these IDs to configure the SDK.
 
 ## SDK Integration
 
@@ -79,14 +90,16 @@ Heimdall provides SDKs for instrumenting your MCP servers:
 ### Python Example
 
 ```python
-import os
-os.environ["HEIMDALL_ENDPOINT"] = "http://localhost:4318"
-os.environ["HEIMDALL_PROJECT_ID"] = "your-project-id"
-os.environ["HEIMDALL_ENABLED"] = "true"
-
 from hmdl import HeimdallClient, trace_mcp_tool
 
-client = HeimdallClient()
+# Initialize client with your organization and project IDs
+client = HeimdallClient(
+    endpoint="http://localhost:4318",
+    org_id="your-org-id",           # From Settings page
+    project_id="your-project-id",   # From Settings page
+    service_name="my-mcp-server",
+    environment="development"
+)
 
 @trace_mcp_tool()
 def my_tool(query: str) -> dict:
@@ -101,11 +114,14 @@ client.flush()
 ```typescript
 import { HeimdallClient, traceMCPTool } from 'hmdl';
 
-process.env.HEIMDALL_ENDPOINT = "http://localhost:4318";
-process.env.HEIMDALL_PROJECT_ID = "your-project-id";
-process.env.HEIMDALL_ENABLED = "true";
-
-const client = new HeimdallClient();
+// Initialize client with your organization and project IDs
+const client = new HeimdallClient({
+  endpoint: "http://localhost:4318",
+  orgId: "your-org-id",           // From Settings page
+  projectId: "your-project-id",   // From Settings page
+  serviceName: "my-mcp-server",
+  environment: "development"
+});
 
 const myTool = traceMCPTool(
   async (query: string) => ({ result: "success" }),
@@ -116,6 +132,31 @@ await myTool("test");
 await client.flush();
 ```
 
+### Using Environment Variables
+
+You can also configure the SDK using environment variables:
+
+```bash
+export HEIMDALL_ENDPOINT="http://localhost:4318"
+export HEIMDALL_ORG_ID="your-org-id"
+export HEIMDALL_PROJECT_ID="your-project-id"
+export HEIMDALL_SERVICE_NAME="my-mcp-server"
+export HEIMDALL_ENVIRONMENT="development"
+export HEIMDALL_ENABLED="true"
+```
+
+Then simply initialize the client without arguments:
+
+```python
+# Python
+client = HeimdallClient()
+```
+
+```typescript
+// JavaScript/TypeScript
+const client = new HeimdallClient();
+```
+
 ## Configuration
 
 ### Environment Variables
@@ -123,10 +164,23 @@ await client.flush();
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `HEIMDALL_ENDPOINT` | Backend OTLP endpoint | `http://localhost:4318` |
+| `HEIMDALL_ORG_ID` | Organization ID from dashboard | `default` |
 | `HEIMDALL_PROJECT_ID` | Project ID for trace grouping | `default` |
-| `HEIMDALL_ENABLED` | Enable/disable tracing | `true` |
 | `HEIMDALL_SERVICE_NAME` | Service name in traces | `mcp-server` |
 | `HEIMDALL_ENVIRONMENT` | Environment tag | `development` |
+| `HEIMDALL_ENABLED` | Enable/disable tracing | `true` |
+
+### Client Configuration Options
+
+| Option | Python | JavaScript | Description |
+|--------|--------|------------|-------------|
+| Endpoint | `endpoint` | `endpoint` | Heimdall backend URL |
+| Organization ID | `org_id` | `orgId` | Your organization ID |
+| Project ID | `project_id` | `projectId` | Your project ID |
+| Service Name | `service_name` | `serviceName` | Name of your service |
+| Environment | `environment` | `environment` | Deployment environment |
+| API Key | `api_key` | `apiKey` | Optional API key |
+| Debug | `debug` | `debug` | Enable debug logging |
 
 ## Project Structure
 
