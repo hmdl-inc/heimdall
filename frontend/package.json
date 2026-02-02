@@ -1,12 +1,13 @@
 {
-  "name": "heimdall-frontend",
+  "name": "lombard-frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate-data": "node scripts/generateTraces.js"
   },
   "dependencies": {
     "lucide-react": "^0.378.0",

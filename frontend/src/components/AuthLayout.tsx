@@ -12,8 +12,8 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ title, subtitle, childre
       <div className="w-full max-w-[400px]">
         {/* Brand Header */}
         <div className="flex flex-col items-center mb-8">
-          <img src="/logo.png" alt="Heimdall" className="w-16 h-16 mb-3" />
-          <span className="text-2xl font-bold text-slate-900 tracking-tight">Heimdall</span>
+          <span className="text-5xl mb-2">🏎️</span>
+          <span className="text-2xl font-bold text-slate-900 tracking-tight">Lombard</span>
         </div>
 
         {/* Card */}
@@ -28,7 +28,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ title, subtitle, childre
         
         <div className="mt-8 text-center">
           <p className="text-xs text-slate-400">
-            &copy; {new Date().getFullYear()} Heimdall Inc. All rights reserved.
+            &copy; {new Date().getFullYear()} Lombard Inc. All rights reserved.
           </p>
         </div>
       </div>

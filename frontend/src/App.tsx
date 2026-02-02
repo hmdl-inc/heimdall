@@ -6,13 +6,17 @@ import { DashboardLayout, TimeRange, TIME_RANGE_OPTIONS } from './components/Das
 import { SettingsPage } from './components/SettingsPage';
 import { TracingPage } from './components/TracingPage';
 import { UsersPage } from './components/UsersPage';
+import { SessionsPage } from './components/SessionsPage';
+import { ClientsPage } from './components/ClientsPage';
+import { PerformancePage } from './components/PerformancePage';
+import { AlertsPage } from './components/AlertsPage';
 import { authService } from './services/authService';
 import { traceService } from './services/traceService';
 import { User, Organization, Project } from './types';
 import { Button } from './components/ui/Button';
 import { Input } from './components/ui/Input';
-import { Building2, Box, X } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Building2, Box, X, Construction } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
 // --- MODAL COMPONENT ---
 const Modal = ({ isOpen, onClose, children }: { isOpen: boolean; onClose: () => void; children: React.ReactNode }) => {
@@ -160,8 +164,8 @@ const SetupPage = ({ onSuccess, userId }: { onSuccess: () => void, userId: strin
       <div className="w-full max-w-lg">
         <div className="flex justify-center mb-8">
             <div className="flex items-center gap-2">
-                <img src="/logo.png" alt="Heimdall" className="w-8 h-8" />
-                <span className="text-2xl font-bold text-slate-900">Heimdall</span>
+                <span className="text-3xl mr-2">🏎️</span>
+                <span className="text-2xl font-bold text-slate-900">Lombard</span>
             </div>
         </div>
 
@@ -231,9 +235,25 @@ const SetupPage = ({ onSuccess, userId }: { onSuccess: () => void, userId: strin
   );
 }
 
+// --- COMING SOON PLACEHOLDER ---
+const ComingSoonPage = ({ title }: { title: string }) => (
+  <div className="flex flex-col items-center justify-center py-20">
+    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-6">
+      <Construction className="w-8 h-8 text-slate-400" />
+    </div>
+    <h2 className="text-xl font-semibold text-slate-900 mb-2">{title}</h2>
+    <p className="text-slate-500 text-center max-w-md">
+      This feature is currently under development. Check back soon!
+    </p>
+  </div>
+);
+
 // --- MAIN DASHBOARD COMPONENT ---
 const DashboardHome = ({ project, timeRange }: { project: Project; timeRange: TimeRange }) => {
   const [stats, setStats] = useState<any>(null);
+  const [userStats, setUserStats] = useState<any>(null);
+  const [sessionStats, setSessionStats] = useState<any>(null);
+  const [perfStats, setPerfStats] = useState<any>(null);
 
   const timeRangeHours = TIME_RANGE_OPTIONS.find(t => t.value === timeRange)?.hours ?? 0;
   // Use linkedTraceProjectId if available, otherwise use project.id
@@ -242,8 +262,16 @@ const DashboardHome = ({ project, timeRange }: { project: Project; timeRange: Ti
   useEffect(() => {
     const loadData = async () => {
       setStats(null); // Reset while loading
-      const data = await traceService.getStats(traceProjectId, timeRangeHours);
-      setStats(data);
+      const [statsData, userData, sessionData, perfData] = await Promise.all([
+        traceService.getStats(traceProjectId, timeRangeHours),
+        traceService.getUserAnalytics(traceProjectId),
+        traceService.getSessionAnalytics(traceProjectId),
+        traceService.getPerformanceAnalytics(traceProjectId)
+      ]);
+      setStats(statsData);
+      setUserStats(userData);
+      setSessionStats(sessionData);
+      setPerfStats(perfData);
     };
     loadData();
   }, [traceProjectId, timeRangeHours]);
@@ -252,67 +280,91 @@ const DashboardHome = ({ project, timeRange }: { project: Project; timeRange: Ti
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Top Cards Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Trace Card */}
-        <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
-          <div className="flex flex-col h-full justify-between">
-             <div>
-                <h3 className="text-base font-semibold text-slate-900 mb-4">Trace</h3>
-                <div className="flex items-baseline gap-2 mb-6">
-                    <span className="text-4xl font-bold text-slate-900">{stats.totalTraces}</span>
-                    <span className="text-sm text-slate-500">total traces tracked</span>
-                </div>
-                
-                <div className="space-y-3">
-                    {stats.topTools.map((item: any, i: number) => (
-                        <div key={i} className="flex items-center text-sm">
-                            <span className="w-24 truncate font-medium text-slate-600">{item.name}</span>
-                            <div className="flex-1 mx-3 h-6 bg-slate-50 rounded overflow-hidden relative">
-                                <div className="absolute top-0 left-0 h-full bg-blue-100 rounded" style={{ width: item.width }}></div>
-                            </div>
-                            <span className="w-8 text-right font-medium text-slate-900">{item.count}</span>
-                        </div>
-                    ))}
-                </div>
-             </div>
-          </div>
+      {/* Top Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+          <p className="text-xs font-medium text-slate-500 mb-1">Total Traces</p>
+          <p className="text-2xl font-bold text-slate-900">{stats.totalTraces}</p>
         </div>
-
-        {/* Error Card */}
-        <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
-           <div className="flex flex-col h-full">
-              <h3 className="text-base font-semibold text-slate-900 mb-4">Error</h3>
-              <div className="flex items-baseline gap-2 mb-6">
-                 <span className={`text-4xl font-bold ${stats.errorRate > 0 ? 'text-red-500' : 'text-slate-900'}`}>{stats.errorRate}%</span>
-                 <span className="text-sm text-slate-500">error rate</span>
-              </div>
-              <div className="space-y-3 mt-auto">
-                 {Object.entries(stats.errorBreakdown).length > 0 ? (
-                    Object.entries(stats.errorBreakdown).map(([type, count]: any, i) => (
-                        <div key={i} className="flex justify-between text-sm">
-                            <span className="text-slate-500 truncate pr-2 max-w-[180px]">{type}</span>
-                            <span className="font-semibold text-slate-900">{count}</span>
-                        </div>
-                    ))
-                 ) : (
-                    <div className="text-sm text-slate-400">No errors recorded.</div>
-                 )}
-              </div>
-           </div>
+        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+          <p className="text-xs font-medium text-slate-500 mb-1">Total Users</p>
+          <p className="text-2xl font-bold text-slate-900">{userStats?.totalUsers || 0}</p>
         </div>
-
-        {/* Scores Card */}
-        <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
-           <h3 className="text-base font-semibold text-slate-900 mb-1">Scores</h3>
-           <p className="text-xs text-slate-500 mb-4">LLM-as-a-Judge</p>
-           <div className="flex-1 bg-slate-50 rounded border border-dashed border-slate-200 h-40 flex flex-col items-center justify-center text-slate-400">
-               <span className="text-sm font-medium text-slate-500">No Data</span>
-           </div>
+        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+          <p className="text-xs font-medium text-slate-500 mb-1">Error Rate (This Week)</p>
+          <p className={`text-2xl font-bold ${stats.errorRate > 5 ? 'text-red-500' : 'text-slate-900'}`}>{stats.errorRate}%</p>
         </div>
       </div>
 
-      {/* Middle Row: Large Chart & Client Types */}
+      {/* Charts Row: Active Users & Sessions */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Active User Growth */}
+        <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+          <h3 className="text-base font-semibold text-slate-900 mb-4">Active User Growth</h3>
+          {userStats?.activeUserTrend && userStats.activeUserTrend.length > 0 ? (
+            <>
+              <div className="h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={userStats.activeUserTrend.slice(-7)}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                    <Legend />
+                    <Line type="monotone" dataKey="dau" name="DAU" stroke="#3b82f6" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="wau" name="WAU" stroke="#22c55e" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="mau" name="MAU" stroke="#8b5cf6" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex items-center justify-center gap-6 mt-3 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                  <span className="text-slate-600">DAU: <span className="font-semibold">{userStats.dau}</span></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  <span className="text-slate-600">WAU: <span className="font-semibold">{userStats.wau}</span></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-violet-500"></div>
+                  <span className="text-slate-600">MAU: <span className="font-semibold">{userStats.mau}</span></span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="text-sm text-slate-400 text-center py-8">No user data</div>
+          )}
+        </div>
+
+        {/* Sessions (Weekly) */}
+        <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+          <h3 className="text-base font-semibold text-slate-900 mb-4">Sessions (Last 7 Days)</h3>
+          {sessionStats?.sessionsByDay && sessionStats.sessionsByDay.length > 0 ? (
+            <>
+              <div className="h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={sessionStats.sessionsByDay}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                    <Line type="monotone" dataKey="count" name="Sessions" stroke="#f59e0b" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex items-center justify-center gap-6 mt-3 text-sm">
+                <span className="text-slate-600">Today: <span className="font-semibold">{sessionStats.sessionsToday}</span></span>
+                <span className="text-slate-600">Total: <span className="font-semibold">{sessionStats.totalSessions}</span></span>
+              </div>
+            </>
+          ) : (
+            <div className="text-sm text-slate-400 text-center py-8">No session data</div>
+          )}
+        </div>
+      </div>
+
+      {/* Middle Row: Volume Chart & Top Tools */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
          <div className="lg:col-span-2 bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
             <h3 className="text-base font-semibold text-slate-900 mb-6">Daily Volume</h3>
@@ -349,69 +401,107 @@ const DashboardHome = ({ project, timeRange }: { project: Project; timeRange: Ti
          </div>
 
          <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
-            <h3 className="text-base font-semibold text-slate-900 mb-1">Client</h3>
-            <p className="text-xs text-slate-500 mb-6">MCP client types</p>
-            <div className="space-y-4">
-                {stats.clientData.map((item: any, i: number) => (
-                    <div key={i} className="flex items-center justify-between">
-                         <div className={`h-8 rounded-md bg-blue-100`} style={{ width: item.width }}></div>
-                         <div className="flex items-center gap-2">
-                             <span className="text-sm font-medium text-slate-700">{item.label}</span>
-                             <span className="text-xs text-slate-400">({item.count})</span>
-                         </div>
+            <h3 className="text-base font-semibold text-slate-900 mb-4">Top Tools</h3>
+            <div className="space-y-3">
+                {stats.topTools.map((item: any, i: number) => (
+                    <div key={i} className="flex items-center text-sm">
+                        <span className="w-24 truncate font-medium text-slate-600">{item.name}</span>
+                        <div className="flex-1 mx-3 h-6 bg-slate-50 rounded overflow-hidden relative">
+                            <div className="absolute top-0 left-0 h-full bg-blue-100 rounded" style={{ width: item.width }}></div>
+                        </div>
+                        <span className="w-10 text-right font-medium text-slate-900">{item.count}</span>
                     </div>
                 ))}
             </div>
+            {stats.topTools.length === 0 && (
+              <div className="text-sm text-slate-400 text-center py-8">No tool data yet</div>
+            )}
          </div>
       </div>
 
-      {/* Bottom Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-         <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
-            <h3 className="text-base font-semibold text-slate-900 mb-6">Traces by time</h3>
-             <div className="h-40 w-full">
-               <ResponsiveContainer width="100%" height="100%">
-                 <LineChart data={stats.chartData}>
-                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                   <XAxis hide />
-                   <YAxis hide />
-                   <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} dot={false} />
-                 </LineChart>
-               </ResponsiveContainer>
-            </div>
-         </div>
+      {/* Clients */}
+      <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+         <h3 className="text-base font-semibold text-slate-900 mb-4">Client Distribution</h3>
+         {stats.clientData.length > 0 ? (
+           <div className="h-48">
+             <ResponsiveContainer width="100%" height="100%">
+               <PieChart>
+                 <Pie
+                   data={stats.clientData.map((item: any) => ({ name: item.label, value: item.count }))}
+                   cx="50%"
+                   cy="50%"
+                   innerRadius={40}
+                   outerRadius={70}
+                   paddingAngle={2}
+                   dataKey="value"
+                 >
+                   {stats.clientData.map((_: any, index: number) => (
+                     <Cell key={`cell-${index}`} fill={['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'][index % 6]} />
+                   ))}
+                 </Pie>
+                 <Tooltip />
+                 <Legend 
+                   layout="horizontal" 
+                   align="center" 
+                   verticalAlign="bottom"
+                   formatter={(value) => <span className="text-sm text-slate-600">{value}</span>}
+                 />
+               </PieChart>
+             </ResponsiveContainer>
+           </div>
+         ) : (
+           <div className="text-sm text-slate-400 text-center py-8">No client data</div>
+         )}
+      </div>
 
-         <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
-            <h3 className="text-base font-semibold text-slate-900 mb-4">Trace Latencies</h3>
-            <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                    <thead>
-                        <tr className="text-slate-500 text-xs border-b border-slate-100">
-                            <th className="text-left font-semibold pb-2">TRACE NAME</th>
-                            <th className="text-right font-semibold pb-2">P50</th>
-                            <th className="text-right font-semibold pb-2">P90</th>
-                            <th className="text-right font-semibold pb-2">P99</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-50">
-                        {stats.latencyTable.map((row: any, i: number) => (
-                            <tr key={i} className="text-slate-600">
-                                <td className="py-3 font-medium text-slate-900">{row.name}</td>
-                                <td className="py-3 text-right">{row.p50}</td>
-                                <td className="py-3 text-right">{row.p90}</td>
-                                <td className="py-3 text-right">{row.p99}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-         </div>
-
-         <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
-            <h3 className="text-base font-semibold text-slate-900 mb-6">Score Analytics</h3>
-            <div className="bg-slate-50 border border-dashed border-slate-200 rounded h-32 flex items-center justify-center">
-                <span className="text-sm font-semibold text-slate-400">No Data</span>
-            </div>
+      {/* Full Width: Performance Table */}
+      <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+         <h3 className="text-base font-semibold text-slate-900 mb-4">Performance</h3>
+         <div className="overflow-x-auto">
+             <table className="w-full text-sm">
+                 <thead>
+                     <tr className="text-slate-500 text-xs border-b border-slate-100">
+                         <th className="text-left font-semibold pb-3">TOOL NAME</th>
+                         <th className="text-right font-semibold pb-3">COUNT</th>
+                         <th className="text-right font-semibold pb-3">AVG</th>
+                         <th className="text-right font-semibold pb-3">P50</th>
+                         <th className="text-right font-semibold pb-3">P95</th>
+                         <th className="text-right font-semibold pb-3">ERRORS</th>
+                         <th className="text-right font-semibold pb-3">ERROR RATE</th>
+                     </tr>
+                 </thead>
+                 <tbody className="divide-y divide-slate-50">
+                     {perfStats?.toolLatencies?.map((row: any, i: number) => {
+                         const errorCount = Math.round(row.count * row.errorRate / 100);
+                         return (
+                           <tr key={i} className="text-slate-600 hover:bg-slate-50">
+                               <td className="py-3 font-medium text-slate-900">{row.tool}</td>
+                               <td className="py-3 text-right text-slate-500">{row.count}</td>
+                               <td className="py-3 text-right">{row.avg}ms</td>
+                               <td className="py-3 text-right">{row.p50}ms</td>
+                               <td className="py-3 text-right">
+                                 <span className={row.p95 > 1000 ? 'text-amber-600 font-medium' : ''}>{row.p95}ms</span>
+                               </td>
+                               <td className="py-3 text-right">
+                                 <span className={errorCount > 0 ? 'text-red-600 font-medium' : 'text-slate-500'}>{errorCount}</span>
+                               </td>
+                               <td className="py-3 text-right">
+                                 <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                   row.errorRate > 10 ? 'bg-red-100 text-red-700' :
+                                   row.errorRate > 5 ? 'bg-amber-100 text-amber-700' :
+                                   'bg-green-100 text-green-700'
+                                 }`}>
+                                   {row.errorRate}%
+                                 </span>
+                               </td>
+                           </tr>
+                         );
+                     })}
+                 </tbody>
+             </table>
+             {(!perfStats?.toolLatencies || perfStats.toolLatencies.length === 0) && (
+               <div className="text-sm text-slate-400 text-center py-8">No performance data available</div>
+             )}
          </div>
       </div>
     </div>
@@ -475,7 +565,7 @@ const AppContainer = () => {
         const proj = await authService.getProject(user.id);
         setCurrentProject(proj);
         await loadOrgsAndProjects();
-        navigate('/dashboard');
+        navigate('/');
     } else {
         // Redirect to setup if no org
         navigate('/setup');
@@ -489,7 +579,7 @@ const AppContainer = () => {
           setCurrentOrg(org);
           setCurrentProject(proj);
           await loadOrgsAndProjects();
-          navigate('/dashboard');
+          navigate('/');
       }
   };
 
@@ -548,7 +638,7 @@ const AppContainer = () => {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center text-slate-500">
         <div className="animate-pulse flex flex-col items-center">
-          <img src="/logo.png" alt="Heimdall" className="w-10 h-10 mb-4 opacity-30" />
+          <span className="text-4xl mb-4 opacity-30">🏎️</span>
         </div>
       </div>
     );
@@ -573,7 +663,7 @@ const AppContainer = () => {
         <Route 
           path="/login" 
           element={
-            currentUser ? <Navigate to="/dashboard" /> : (
+            currentUser ? <Navigate to="/" /> : (
               <LoginForm 
                 onSuccess={handleLoginSuccess} 
                 onToggleMode={() => navigate('/signup')} 
@@ -584,7 +674,7 @@ const AppContainer = () => {
         <Route 
           path="/signup" 
           element={
-            currentUser ? <Navigate to="/dashboard" /> : (
+            currentUser ? <Navigate to="/" /> : (
               <SignupForm 
                 onSuccess={handleLoginSuccess} 
                 onToggleMode={() => navigate('/login')} 
@@ -598,18 +688,18 @@ const AppContainer = () => {
           path="/setup"
           element={
               currentUser ? (
-                  currentOrg ? <Navigate to="/dashboard" /> : <SetupPage onSuccess={handleSetupSuccess} userId={currentUser.id} />
+                  currentOrg ? <Navigate to="/" /> : <SetupPage onSuccess={handleSetupSuccess} userId={currentUser.id} />
               ) : (
                   <Navigate to="/login" />
               )
           }
         />
 
+        {/* Protected routes with DashboardLayout */}
         <Route 
-          path="/dashboard/*" 
+          path="/*" 
           element={
             currentUser ? (
-               // If user is logged in but no org, force setup
                !currentOrg ? (
                   <Navigate to="/setup" />
                ) : (
@@ -628,21 +718,21 @@ const AppContainer = () => {
                       onCreateProject={() => setCreateProjectModalOpen(true)}
                   >
                     <Routes>
+                      {/* Home & Dashboard */}
                       <Route path="/" element={currentProject ? <DashboardHome project={currentProject} timeRange={timeRange} /> : null} />
-                      <Route path="analytics" element={currentProject ? <DashboardHome project={currentProject} timeRange={timeRange} /> : null} />
+                      <Route path="/dashboard" element={currentProject ? <DashboardHome project={currentProject} timeRange={timeRange} /> : null} />
                       
-                      {/* New Tracing & Users Routes */}
-                      <Route 
-                          path="tracing" 
-                          element={currentProject ? <TracingPage project={currentProject} /> : null} 
-                      />
-                       <Route 
-                          path="users" 
-                          element={currentProject ? <UsersPage project={currentProject} /> : null} 
-                      />
+                      {/* Main Pages */}
+                      <Route path="/users" element={currentProject ? <UsersPage project={currentProject} /> : null} />
+                      <Route path="/sessions" element={currentProject ? <SessionsPage project={currentProject} /> : null} />
+                      <Route path="/clients" element={currentProject ? <ClientsPage project={currentProject} /> : null} />
+                      <Route path="/performance" element={currentProject ? <PerformancePage project={currentProject} /> : null} />
+                      <Route path="/alerts" element={currentProject ? <AlertsPage project={currentProject} /> : null} />
+                      <Route path="/tracing" element={currentProject ? <TracingPage project={currentProject} /> : null} />
 
+                      {/* Settings */}
                       <Route 
-                          path="settings" 
+                          path="/settings" 
                           element={
                               currentProject ? (
                                   <SettingsPage 
@@ -653,7 +743,7 @@ const AppContainer = () => {
                               ) : <div>Loading...</div>
                           } 
                       />
-                      <Route path="*" element={<div className="text-slate-500">Page not found</div>} />
+                      <Route path="*" element={<Navigate to="/" />} />
                     </Routes>
                   </DashboardLayout>
                )
@@ -662,12 +752,6 @@ const AppContainer = () => {
             )
           } 
         />
-        
-        {/* Root redirects for new top-level sidebar items */}
-        <Route path="/tracing" element={<Navigate to="/dashboard/tracing" />} />
-        <Route path="/users" element={<Navigate to="/dashboard/users" />} />
-
-        <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </>
   );

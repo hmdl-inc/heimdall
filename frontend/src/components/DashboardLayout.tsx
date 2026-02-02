@@ -7,19 +7,15 @@ import {
   Clock,
   Users,
   Settings,
-  LifeBuoy,
   SlidersHorizontal,
   ChevronDown,
-  Hammer,
-  Play,
-  Grid,
-  Rocket,
-  Target,
-  Gavel,
-  UserCheck,
   Plus,
   Check,
-  LogOut
+  LogOut,
+  Gauge,
+  Bell,
+  Search,
+  Monitor
 } from 'lucide-react';
 import { User, Organization, Project } from '../types';
 
@@ -151,12 +147,16 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   // Helper to determine Page Title
   const getPageTitle = (path: string) => {
-    if (path === '/dashboard') return 'Home';
-    if (path === '/dashboard/analytics') return 'Dashboard';
-    if (path.includes('/settings')) return 'Project Settings';
-    if (path.includes('/tracing')) return 'Tracing';
-    if (path.includes('/users')) return 'Users';
-    return 'Dashboard';
+    if (path === '/') return 'Home';
+    if (path === '/dashboard') return 'Dashboard';
+    if (path === '/settings') return 'Settings';
+    if (path === '/tracing') return 'Search';
+    if (path === '/users') return 'Users';
+    if (path === '/sessions') return 'Sessions';
+    if (path === '/clients') return 'Clients';
+    if (path === '/performance') return 'Performance';
+    if (path === '/alerts') return 'Alerts';
+    return 'Home';
   };
 
   const currentTimeRange = TIME_RANGE_OPTIONS.find(t => t.value === timeRange) || TIME_RANGE_OPTIONS[1];
@@ -165,43 +165,25 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col fixed h-full z-20">
-        <div className="h-16 flex items-center px-6 border-b border-slate-100">
-          <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="Heimdall" className="w-8 h-8" />
-            <span className="text-xl font-bold text-slate-900">Heimdall</span>
-          </div>
+        <div className="h-16 flex items-center gap-2 px-6 border-b border-slate-100">
+          <span className="text-2xl">🏎️</span>
+          <span className="text-xl font-bold text-slate-900">Lombard</span>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
-          <SidebarSection>
-            <SidebarItem icon={Home} label="Home" to="/dashboard" active={location.pathname === '/dashboard'} />
-            <SidebarItem icon={LayoutDashboard} label="Dashboard" to="/dashboard/analytics" />
-          </SidebarSection>
-
-          <SidebarSection title="Observe">
-            <SidebarItem icon={Activity} label="Tracing" to="/tracing" />
-            <SidebarItem icon={Users} label="Users" to="/users" />
-          </SidebarSection>
-
-          <SidebarSection title="Build (Coming Soon)">
-            <SidebarItem icon={Hammer} label="Prompts" to="#" soon />
-            <SidebarItem icon={Play} label="Playground" to="#" soon />
-            <SidebarItem icon={Grid} label="App Studio" to="#" soon />
-          </SidebarSection>
-
-          <SidebarSection title="Deploy (Coming Soon)">
-             <SidebarItem icon={Rocket} label="Deployment" to="#" soon />
-          </SidebarSection>
-
-          <SidebarSection title="Evaluate (Coming Soon)">
-             <SidebarItem icon={Target} label="Scores" to="#" soon />
-             <SidebarItem icon={Gavel} label="LLM-as-a-Judge" to="#" soon />
-             <SidebarItem icon={UserCheck} label="Human Annotation" to="#" soon />
-          </SidebarSection>
+          <div className="space-y-0.5">
+            <SidebarItem icon={Home} label="Home" to="/" active={location.pathname === '/'} />
+            <SidebarItem icon={LayoutDashboard} label="Dashboard" to="/dashboard" active={location.pathname === '/dashboard'} />
+            <SidebarItem icon={Users} label="Users" to="/users" active={location.pathname === '/users'} />
+            <SidebarItem icon={Activity} label="Sessions" to="/sessions" active={location.pathname === '/sessions'} />
+            <SidebarItem icon={Monitor} label="Clients" to="/clients" active={location.pathname === '/clients'} />
+            <SidebarItem icon={Gauge} label="Performance" to="/performance" active={location.pathname === '/performance'} />
+            <SidebarItem icon={Bell} label="Alerts" to="/alerts" active={location.pathname === '/alerts'} />
+            <SidebarItem icon={Search} label="Search" to="/tracing" active={location.pathname === '/tracing'} />
+          </div>
 
           <div className="pt-4 mt-4 border-t border-slate-100">
-            <SidebarItem icon={Settings} label="Settings" to="/dashboard/settings" active={location.pathname.includes('/settings')} />
-            <SidebarItem icon={LifeBuoy} label="Support" to="#" soon />
+            <SidebarItem icon={Settings} label="Settings" to="/settings" active={location.pathname === '/settings'} />
           </div>
         </div>
 
@@ -230,7 +212,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <div className="absolute bottom-full left-0 right-0 mb-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 py-1">
                 <button
                   onClick={() => {
-                    navigate('/dashboard/settings');
+                    navigate('/settings');
                     setUserDropdownOpen(false);
                   }}
                   className="w-full px-3 py-2 text-left text-sm hover:bg-slate-50 flex items-center gap-2 text-slate-700"
@@ -388,7 +370,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
              {/* Configure Tracing -> Settings */}
              <button 
-               onClick={() => navigate('/dashboard/settings')}
+               onClick={() => navigate('/settings')}
                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-300 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
              >
                <SlidersHorizontal className="w-4 h-4" />
