@@ -164,8 +164,8 @@ const SetupPage = ({ onSuccess, userId }: { onSuccess: () => void, userId: strin
       <div className="w-full max-w-lg">
         <div className="flex justify-center mb-8">
             <div className="flex items-center gap-2">
-                <span className="text-3xl mr-2">🏎️</span>
-                <span className="text-2xl font-bold text-slate-900">Lombard</span>
+                <img src="/logo.png" alt="Heimdall" className="w-10 h-10 mr-2" />
+                <span className="text-2xl font-bold text-slate-900">Heimdall</span>
             </div>
         </div>
 

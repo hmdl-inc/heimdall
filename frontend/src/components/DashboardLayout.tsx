@@ -166,8 +166,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col fixed h-full z-20">
         <div className="h-16 flex items-center gap-2 px-6 border-b border-slate-100">
-          <span className="text-2xl">🏎️</span>
-          <span className="text-xl font-bold text-slate-900">Lombard</span>
+          <img src="/logo.png" alt="Heimdall" className="w-8 h-8" />
+          <span className="text-xl font-bold text-slate-900">Heimdall</span>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">

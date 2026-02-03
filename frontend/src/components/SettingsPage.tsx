@@ -55,7 +55,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ userId, project, onU
 
   // Load linked SDK project from localStorage
   useEffect(() => {
-    const linked = localStorage.getItem(`lombard_linked_sdk_${project.id}`);
+    const linked = localStorage.getItem(`heimdall_linked_sdk_${project.id}`);
     if (linked) {
       setLinkedSDKProjectId(linked);
     }
@@ -64,7 +64,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ userId, project, onU
 
   // Link SDK project to current project
   const handleLinkSDKProject = (sdkProjectId: string) => {
-    localStorage.setItem(`lombard_linked_sdk_${project.id}`, sdkProjectId);
+    localStorage.setItem(`heimdall_linked_sdk_${project.id}`, sdkProjectId);
     setLinkedSDKProjectId(sdkProjectId);
     // Update the project's linkedTraceProjectId for fetching traces (keeps original id stable)
     const updatedProject = { ...project, linkedTraceProjectId: sdkProjectId };
@@ -73,7 +73,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ userId, project, onU
 
   // Load API keys from local storage on mount
   useEffect(() => {
-    const storedKeys = localStorage.getItem(`lombard_api_keys_${project.id}`);
+    const storedKeys = localStorage.getItem(`heimdall_api_keys_${project.id}`);
     if (storedKeys) {
       setApiKeys(JSON.parse(storedKeys));
     } else {
@@ -113,14 +113,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ userId, project, onU
     
     const updatedKeys = [...apiKeys, newKey];
     setApiKeys(updatedKeys);
-    localStorage.setItem(`lombard_api_keys_${project.id}`, JSON.stringify(updatedKeys));
+    localStorage.setItem(`heimdall_api_keys_${project.id}`, JSON.stringify(updatedKeys));
   };
 
   // Handle Delete API Key
   const handleDeleteKey = (id: string) => {
     const updatedKeys = apiKeys.filter(k => k.id !== id);
     setApiKeys(updatedKeys);
-    localStorage.setItem(`lombard_api_keys_${project.id}`, JSON.stringify(updatedKeys));
+    localStorage.setItem(`heimdall_api_keys_${project.id}`, JSON.stringify(updatedKeys));
   };
 
   return (
@@ -167,7 +167,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ userId, project, onU
         <h2 className="text-xl font-bold text-slate-900">SDK Configuration</h2>
         <div className="max-w-xl bg-white p-6 border border-slate-200 rounded-lg shadow-sm">
           <p className="text-sm text-slate-500 mb-4">
-            Use these settings when configuring the Lombard SDK in your MCP server.
+            Use these settings when configuring the Heimdall SDK in your MCP server.
           </p>
 
           {/* Project ID Display */}
@@ -195,17 +195,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ userId, project, onU
             <div className="text-slate-400 select-none mb-1"># Environment Variables</div>
             <div className="space-y-1">
               <div className="flex flex-wrap">
-                <span className="text-blue-400">LOMBARD_ENDPOINT</span>
+                <span className="text-blue-400">HEIMDALL_ENDPOINT</span>
                 <span className="text-slate-500 mx-2">=</span>
                 <span className="text-green-400">{window.location.protocol}//{window.location.hostname}:4318</span>
               </div>
               <div className="flex flex-wrap">
-                <span className="text-blue-400">LOMBARD_PROJECT_ID</span>
+                <span className="text-blue-400">HEIMDALL_PROJECT_ID</span>
                 <span className="text-slate-500 mx-2">=</span>
                 <span className="text-green-400">{project.id}</span>
               </div>
               <div className="flex flex-wrap">
-                <span className="text-blue-400">LOMBARD_ENABLED</span>
+                <span className="text-blue-400">HEIMDALL_ENABLED</span>
                 <span className="text-slate-500 mx-2">=</span>
                 <span className="text-green-400">true</span>
               </div>
@@ -285,17 +285,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ userId, project, onU
             <div className="text-slate-400 select-none mb-1">.env</div>
             <div className="space-y-1">
                 <div className="flex">
-                    <span className="text-blue-400">LOMBARD_SECRET_KEY</span>
+                    <span className="text-blue-400">HEIMDALL_SECRET_KEY</span>
                     <span className="text-slate-500 mx-2">=</span>
                     <span className="text-green-400">{apiKeys[0]?.secretKey || '...'}</span>
                 </div>
                 <div className="flex">
-                    <span className="text-blue-400">LOMBARD_PUBLIC_KEY</span>
+                    <span className="text-blue-400">HEIMDALL_PUBLIC_KEY</span>
                     <span className="text-slate-500 mx-2">=</span>
                     <span className="text-green-400">{apiKeys[0]?.publicKey || '...'}</span>
                 </div>
                 <div className="flex">
-                    <span className="text-blue-400">LOMBARD_BASE_URL</span>
+                    <span className="text-blue-400">HEIMDALL_BASE_URL</span>
                     <span className="text-slate-500 mx-2">=</span>
                     <span className="text-green-400">{window.location.origin}</span>
                 </div>

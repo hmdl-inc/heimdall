@@ -1,6 +1,6 @@
 import { User, AuthResponse, Organization, Project } from '../types';
 
-const SESSION_KEY = 'lombard_current_session';
+const SESSION_KEY = 'heimdall_current_session';
 
 // Helper to simulate network delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
