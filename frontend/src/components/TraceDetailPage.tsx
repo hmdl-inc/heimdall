@@ -134,7 +134,6 @@ const SpanTreeItem: React.FC<SpanTreeItemProps> = ({ node, depth, selectedSpanId
 };
 
 export const TraceDetailPage: React.FC<TraceDetailPageProps> = ({ trace, onBack, onUserClick }) => {
-  const [activeTab, setActiveTab] = useState<'preview' | 'scores'>('preview');
   const [copied, setCopied] = useState(false);
 
   // Build span tree from trace data
@@ -211,29 +210,6 @@ export const TraceDetailPage: React.FC<TraceDetailPageProps> = ({ trace, onBack,
             </div>
           </div>
 
-          {/* Tabs */}
-          <div className="flex items-center gap-4 px-6 border-b border-slate-200">
-            <button 
-              onClick={() => setActiveTab('preview')}
-              className={`py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === 'preview' 
-                  ? 'border-primary-500 text-primary-600' 
-                  : 'border-transparent text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              Preview
-            </button>
-            <button 
-              onClick={() => setActiveTab('scores')}
-              className={`py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === 'scores' 
-                  ? 'border-primary-500 text-primary-600' 
-                  : 'border-transparent text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              Scores
-            </button>
-          </div>
 
           {/* Span Info */}
           <div className="p-6">
@@ -253,43 +229,30 @@ export const TraceDetailPage: React.FC<TraceDetailPageProps> = ({ trace, onBack,
               </span>
             </div>
 
-            {activeTab === 'preview' ? (
-              <div className="space-y-6">
-                {/* Input */}
-                <JsonViewer data={selectedSpan.input} label="Input" />
+            <div className="space-y-6">
+              {/* Input */}
+              <JsonViewer data={selectedSpan.input} label="Input" />
 
-                {/* Output */}
-                <JsonViewer data={selectedSpan.output} label="Output" />
+              {/* Output */}
+              <JsonViewer data={selectedSpan.output} label="Output" />
 
-                {/* Metadata */}
-                {selectedSpan.metadata && Object.keys(selectedSpan.metadata).length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-medium text-slate-700 mb-2">Metadata</h4>
-                    <div className="bg-slate-50 rounded-lg p-4">
-                      <dl className="grid grid-cols-2 gap-2 text-sm">
-                        {Object.entries(selectedSpan.metadata).map(([key, value]) => (
-                          <div key={key} className="flex gap-2">
-                            <dt className="text-slate-500">{key}:</dt>
-                            <dd className="text-slate-700 font-mono">{String(value)}</dd>
-                          </div>
-                        ))}
-                      </dl>
-                    </div>
+              {/* Metadata */}
+              {selectedSpan.metadata && Object.keys(selectedSpan.metadata).length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-slate-700 mb-2">Metadata</h4>
+                  <div className="bg-slate-50 rounded-lg p-4">
+                    <dl className="grid grid-cols-2 gap-2 text-sm">
+                      {Object.entries(selectedSpan.metadata).map(([key, value]) => (
+                        <div key={key} className="flex gap-2">
+                          <dt className="text-slate-500">{key}:</dt>
+                          <dd className="text-slate-700 font-mono">{String(value)}</dd>
+                        </div>
+                      ))}
+                    </dl>
                   </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                  <span className="text-2xl">📊</span>
                 </div>
-                <h4 className="text-lg font-medium text-slate-700 mb-2">Scores</h4>
-                <p className="text-slate-500 text-sm">Coming Soon</p>
-                <p className="text-slate-400 text-xs mt-2 max-w-xs">
-                  Evaluation scores for accuracy, relevance, and other metrics will be available here.
-                </p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
 

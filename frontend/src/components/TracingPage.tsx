@@ -48,8 +48,8 @@ export const TracingPage: React.FC<TracingPageProps> = ({ project }) => {
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
-  // Use linkedTraceProjectId if available, otherwise use project.id
-  const traceProjectId = project.linkedTraceProjectId || project.id;
+  // Use linkedTraceProjectId if available, otherwise use project.name (SDK uses name as project ID)
+  const traceProjectId = project.linkedTraceProjectId || project.name;
 
   useEffect(() => {
     const loadTraces = async () => {

@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate-data": "node scripts/generateTraces.js"
   },
   "dependencies": {
     "lucide-react": "^0.378.0",

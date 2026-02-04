@@ -12,7 +12,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ title, subtitle, childre
       <div className="w-full max-w-[400px]">
         {/* Brand Header */}
         <div className="flex flex-col items-center mb-8">
-          <img src="/logo.png" alt="Heimdall" className="w-16 h-16 mb-3" />
+          <img src="/logo.png" alt="Heimdall" className="w-16 h-16 mb-2" />
           <span className="text-2xl font-bold text-slate-900 tracking-tight">Heimdall</span>
         </div>
 

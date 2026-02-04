@@ -108,11 +108,24 @@ export function dataMiddleware(): Connect.NextHandleFunction {
         return;
       }
 
-      // Get project by userId
+      // Get project by userId (returns first project for this user's org)
       if (url.startsWith('/api/projects/user/') && req.method === 'GET') {
         const userId = url.split('/')[4]; // /api/projects/user/:userId
         const projects = readJsonFile('projects.json');
-        res.end(JSON.stringify(projects[userId] || null));
+        const orgs = readJsonFile('organizations.json');
+
+        // Find user's organization
+        const userOrg = orgs[userId];
+        if (!userOrg) {
+          res.end(JSON.stringify(null));
+          return;
+        }
+
+        // Find first project belonging to user's organization
+        const userProject = Object.values(projects).find(
+          (p: any) => p.organizationId === userOrg.id
+        );
+        res.end(JSON.stringify(userProject || null));
         return;
       }
 
@@ -122,7 +135,8 @@ export function dataMiddleware(): Connect.NextHandleFunction {
         req.on('end', () => {
           const projects = readJsonFile('projects.json');
           const { userId, ...projectData } = JSON.parse(body);
-          projects[userId] = projectData;
+          // Store by project ID, not userId - allows multiple projects
+          projects[projectData.id] = projectData;
           writeJsonFile('projects.json', projects);
           res.end(JSON.stringify({ success: true }));
         });
@@ -135,7 +149,8 @@ export function dataMiddleware(): Connect.NextHandleFunction {
         req.on('end', () => {
           const projects = readJsonFile('projects.json');
           const { userId, ...projectData } = JSON.parse(body);
-          projects[userId] = projectData;
+          // Update by project ID
+          projects[projectData.id] = projectData;
           writeJsonFile('projects.json', projects);
           res.end(JSON.stringify({ success: true }));
         });
