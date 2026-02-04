@@ -15,7 +15,7 @@ import { traceService } from './services/traceService';
 import { User, Organization, Project } from './types';
 import { Button } from './components/ui/Button';
 import { Input } from './components/ui/Input';
-import { Building2, Box, X, Construction } from 'lucide-react';
+import { Building2, Box, X } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
 // --- MODAL COMPONENT ---
@@ -234,19 +234,6 @@ const SetupPage = ({ onSuccess, userId }: { onSuccess: () => void, userId: strin
     </div>
   );
 }
-
-// --- COMING SOON PLACEHOLDER ---
-const ComingSoonPage = ({ title }: { title: string }) => (
-  <div className="flex flex-col items-center justify-center py-20">
-    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-6">
-      <Construction className="w-8 h-8 text-slate-400" />
-    </div>
-    <h2 className="text-xl font-semibold text-slate-900 mb-2">{title}</h2>
-    <p className="text-slate-500 text-center max-w-md">
-      This feature is currently under development. Check back soon!
-    </p>
-  </div>
-);
 
 // --- MAIN DASHBOARD COMPONENT ---
 const DashboardHome = ({ project, timeRange }: { project: Project; timeRange: TimeRange }) => {

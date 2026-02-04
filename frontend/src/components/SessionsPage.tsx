@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Project, Trace } from '../types';
 import { traceService, Session, SessionAnalytics } from '../services/traceService';
-import { Search, Clock, Activity, Loader2, BarChart3, TrendingUp, Zap } from 'lucide-react';
+import { Search, Clock, Activity, Loader2, TrendingUp, Zap } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { TraceDetailPage } from './TraceDetailPage';
 import { UserDetailPage } from './UserDetailPage';

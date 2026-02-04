@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Project, Trace } from '../types';
 import { traceService, ClientAnalytics } from '../services/traceService';
-import { Monitor, AlertCircle, Users, Activity, Zap, Clock } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { Monitor, AlertCircle, Users, Activity } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { TraceDetailPage } from './TraceDetailPage';
 
 interface ClientsPageProps {

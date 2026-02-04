@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Project, Trace } from '../types';
 import { traceService, UserAnalytics } from '../services/traceService';
-import { Search, User as UserIcon, Loader2, Users, UserPlus, ArrowUp, ArrowDown, Package, Settings } from 'lucide-react';
+import { Search, User as UserIcon, Loader2, Users, UserPlus, ArrowUp, ArrowDown, Package, Settings, LucideIcon } from 'lucide-react';
 import { TraceDetailPage } from './TraceDetailPage';
 import { UserDetailPage } from './UserDetailPage';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -38,11 +38,11 @@ interface UserStat {
 }
 
 // Stat Card Component
-const StatCard = ({ title, value, subtitle, icon: Icon, trend }: { 
-  title: string; 
-  value: string | number; 
+const StatCard = ({ title, value, subtitle, icon: Icon, trend }: {
+  title: string;
+  value: string | number;
   subtitle?: string;
-  icon: any;
+  icon: LucideIcon;
   trend?: { value: number; positive: boolean };
 }) => (
   <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
@@ -195,13 +195,13 @@ export const UsersPage: React.FC<UsersPageProps> = ({ project }) => {
 
     const lastUpdated = downloadStats?.lastUpdated;
     const now = new Date();
-    const shouldRefresh = !lastUpdated || 
+    const shouldRefresh = !lastUpdated ||
       (now.getTime() - new Date(lastUpdated).getTime() > 24 * 60 * 60 * 1000); // 24 hours
 
     if (shouldRefresh) {
       fetchDownloadStats();
     }
-  }, [packageConfig.npm, packageConfig.pypi]);
+  }, [packageConfig.npm, packageConfig.pypi, downloadStats?.lastUpdated, fetchDownloadStats]);
   
   const savePackageConfig = () => {
     const newConfig: PackageConfig = {};

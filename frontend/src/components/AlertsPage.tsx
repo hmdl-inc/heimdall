@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Project } from '../types';
 import { traceService } from '../services/traceService';
-import { 
-  AlertTriangle, Bell, Settings, Slack, Check, X, 
-  AlertCircle, TrendingUp, Clock, ChevronRight, ExternalLink,
-  ToggleLeft, ToggleRight, Save, TestTube
+import {
+  AlertTriangle, Bell, Settings, Slack, Check,
+  AlertCircle, TrendingUp, ExternalLink,
+  Save, TestTube
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -79,8 +79,11 @@ const DEFAULT_CONFIG: AlertConfig = {
 };
 
 // Toggle Switch Component
-const Toggle = ({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean) => void }) => (
+const Toggle = ({ enabled, onChange, label }: { enabled: boolean; onChange: (v: boolean) => void; label?: string }) => (
   <button
+    role="switch"
+    aria-checked={enabled}
+    aria-label={label || 'Toggle'}
     onClick={() => onChange(!enabled)}
     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
       enabled ? 'bg-primary-600' : 'bg-slate-200'
@@ -185,10 +188,7 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({ project }) => {
       const last5min = traces.filter(t => new Date(t.start_time) >= fiveMinAgo);
 
       // Calculate error rates
-      const errors24h = last24h.filter(t => t.status !== 'OK');
       const errors5min = last5min.filter(t => t.status !== 'OK');
-      
-      const errorRate24h = last24h.length > 0 ? (errors24h.length / last24h.length) * 100 : 0;
       const errorRate5min = last5min.length > 0 ? (errors5min.length / last5min.length) * 100 : 0;
 
       // Calculate hourly error rates for std dev
@@ -234,7 +234,6 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({ project }) => {
       const usageTrend: { time: string; count: number; avg: number }[] = [];
       
       for (let i = 23; i >= 0; i--) {
-        const hourStart = new Date(now.getTime() - (i + 1) * 60 * 60 * 1000);
         const hourEnd = new Date(now.getTime() - i * 60 * 60 * 1000);
         const hourLabel = hourEnd.getHours().toString().padStart(2, '0') + ':00';
         
@@ -288,7 +287,13 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({ project }) => {
     calculateAnomalies();
     const interval = setInterval(calculateAnomalies, 30000); // Refresh every 30s
     return () => clearInterval(interval);
-  }, [traceProjectId, config]);
+  }, [
+    traceProjectId,
+    config.errorAnomaly.threshold,
+    config.errorAnomaly.minErrors,
+    config.usageAnomaly.threshold,
+    config.usageAnomaly.minRequests
+  ]);
 
   const saveConfig = () => {
     setIsSaving(true);

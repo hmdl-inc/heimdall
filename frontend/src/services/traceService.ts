@@ -1,5 +1,19 @@
 import { Trace, Span, Project } from '../types';
 
+// UUID generation with fallback for older browsers
+const generateUUID = (): string => {
+  // Use crypto.randomUUID() if available (modern browsers)
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  // Fallback implementation for older browsers
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
 // Session interface for grouping traces
 export interface Session {
   sessionId: string;
@@ -122,7 +136,7 @@ const sampleOutputs = [
 
 const generateSpans = (traceId: string, toolName: string, startTime: Date, totalLatency: number, isError: boolean): Span[] => {
   const spans: Span[] = [];
-  const rootSpanId = crypto.randomUUID();
+  const rootSpanId = generateUUID();
   
   const query = randomItem(sampleQueries);
   const output = isError ? `Error: Failed to process request` : randomItem(sampleOutputs);
@@ -153,7 +167,7 @@ const generateSpans = (traceId: string, toolName: string, startTime: Date, total
     // Embedding span
     const embedLatency = Math.floor(remainingLatency * 0.15);
     const embedSpan: Span = {
-      span_id: crypto.randomUUID(),
+      span_id: generateUUID(),
       parent_span_id: rootSpanId,
       name: 'prompt-embedding',
       type: 'GENERATION',
@@ -175,7 +189,7 @@ const generateSpans = (traceId: string, toolName: string, startTime: Date, total
     // Vector store span
     const vecLatency = Math.floor(remainingLatency * 0.25);
     const vecSpan: Span = {
-      span_id: crypto.randomUUID(),
+      span_id: generateUUID(),
       parent_span_id: rootSpanId,
       name: 'vector-store-search',
       type: 'SPAN',
@@ -197,7 +211,7 @@ const generateSpans = (traceId: string, toolName: string, startTime: Date, total
     // Context preparation span
     const ctxLatency = Math.floor(remainingLatency * 0.1);
     const ctxSpan: Span = {
-      span_id: crypto.randomUUID(),
+      span_id: generateUUID(),
       parent_span_id: rootSpanId,
       name: 'context-preparation',
       type: 'SPAN',
@@ -220,7 +234,7 @@ const generateSpans = (traceId: string, toolName: string, startTime: Date, total
     // Code parsing span
     const parseLatency = Math.floor(remainingLatency * 0.1);
     const parseSpan: Span = {
-      span_id: crypto.randomUUID(),
+      span_id: generateUUID(),
       parent_span_id: rootSpanId,
       name: 'code-parsing',
       type: 'SPAN',
@@ -242,7 +256,7 @@ const generateSpans = (traceId: string, toolName: string, startTime: Date, total
     // Execution span
     const execLatency = Math.floor(remainingLatency * 0.3);
     const execSpan: Span = {
-      span_id: crypto.randomUUID(),
+      span_id: generateUUID(),
       parent_span_id: rootSpanId,
       name: 'code-execution',
       type: 'SPAN',
@@ -266,7 +280,7 @@ const generateSpans = (traceId: string, toolName: string, startTime: Date, total
     // Prompt enhancement span
     const enhanceLatency = Math.floor(remainingLatency * 0.15);
     const enhanceSpan: Span = {
-      span_id: crypto.randomUUID(),
+      span_id: generateUUID(),
       parent_span_id: rootSpanId,
       name: 'prompt-enhancement',
       type: 'GENERATION',
@@ -287,7 +301,7 @@ const generateSpans = (traceId: string, toolName: string, startTime: Date, total
     // Image generation span
     const genLatency = Math.floor(remainingLatency * 0.7);
     const genSpan: Span = {
-      span_id: crypto.randomUUID(),
+      span_id: generateUUID(),
       parent_span_id: rootSpanId,
       name: 'image-generation',
       type: 'GENERATION',
@@ -296,7 +310,7 @@ const generateSpans = (traceId: string, toolName: string, startTime: Date, total
       latency_ms: genLatency,
       status: isError ? 'ERROR' : 'OK',
       input: 'Generate image from enhanced prompt',
-      output: isError ? 'Error: Content policy violation' : `Image generated successfully: img_${crypto.randomUUID().substring(0, 8)}.png (1024x1024)`,
+      output: isError ? 'Error: Content policy violation' : `Image generated successfully: img_${generateUUID().substring(0, 8)}.png (1024x1024)`,
       metadata: {
         model: 'dall-e-3',
         size: '1024x1024',
@@ -311,7 +325,7 @@ const generateSpans = (traceId: string, toolName: string, startTime: Date, total
   // Final generation span (LLM call)
   if (remainingLatency > 50) {
     const genSpan: Span = {
-      span_id: crypto.randomUUID(),
+      span_id: generateUUID(),
       parent_span_id: rootSpanId,
       name: 'llm-generation',
       type: 'GENERATION',
@@ -407,7 +421,7 @@ export const traceService = {
     const userSessions: Record<string, string[]> = {};
     users.forEach(userId => {
       const sessionCount = randomInt(2, 5);
-      userSessions[userId] = Array.from({ length: sessionCount }, () => crypto.randomUUID());
+      userSessions[userId] = Array.from({ length: sessionCount }, () => generateUUID());
     });
 
     for (let i = 0; i < 500; i++) {
@@ -427,7 +441,7 @@ export const traceService = {
       const status = isError ? randomItem(['ERROR', 'TIMEOUT', 'CANCELLED'] as const) : 'OK';
       const errorType = isError ? randomItem(errorTypes) : undefined;
       const toolName = randomItem(tools);
-      const traceId = crypto.randomUUID();
+      const traceId = generateUUID();
       const userId = randomItem(users);
       const sessionId = randomItem(userSessions[userId]);
 
@@ -729,15 +743,21 @@ export const traceService = {
       // Calculate retention rate for each period
       const calcRetention = (daysAfter: number): number => {
         let retained = 0;
+        let validUsers = 0;
+
+        // Single pass through cohort users to calculate both retained and validUsers
         cohortUsers.forEach(userId => {
           const firstSeenDate = userFirstSeen[userId];
           const targetDate = new Date(firstSeenDate.getTime() + daysAfter * 24 * 60 * 60 * 1000);
-          
+
           // Skip if target date hasn't arrived yet
           if (targetDate > now) return;
-          
+
+          // This user is valid (target date has passed)
+          validUsers++;
+
           const activityDates = userActivityDates[userId];
-          
+
           // Check if there's activity on or after the target date
           if (activityDates) {
             const hasActivity = Array.from(activityDates).some(dateStr => {
@@ -748,14 +768,7 @@ export const traceService = {
             if (hasActivity) retained++;
           }
         });
-        
-        // Calculate valid users (those whose target date has passed)
-        const validUsers = cohortUsers.filter(userId => {
-          const firstSeenDate = userFirstSeen[userId];
-          const targetDate = new Date(firstSeenDate.getTime() + daysAfter * 24 * 60 * 60 * 1000);
-          return targetDate <= now;
-        }).length;
-        
+
         return validUsers > 0 ? Math.round((retained / validUsers) * 100) : -1; // -1 means N/A
       };
       
