@@ -71,6 +71,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ userId, project, onU
     onUpdateProject(updatedProject);
   };
 
+  // Unlink SDK project from current project
+  const handleUnlinkSDKProject = () => {
+    localStorage.removeItem(`heimdall_linked_sdk_${project.id}`);
+    setLinkedSDKProjectId(null);
+    // Remove linkedTraceProjectId from project
+    const { linkedTraceProjectId, ...projectWithoutLink } = project;
+    onUpdateProject(projectWithoutLink as typeof project);
+  };
+
   // Load API keys from local storage on mount
   useEffect(() => {
     const storedKeys = localStorage.getItem(`heimdall_api_keys_${project.id}`);
@@ -238,33 +247,52 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ userId, project, onU
             </div>
           ) : (
             <div className="space-y-2">
-              {sdkProjects.map((sdkProject) => (
-                <div
-                  key={sdkProject.id}
-                  className={`flex items-center justify-between p-3 border rounded-lg transition-colors ${
-                    linkedSDKProjectId === sdkProject.id || project.id === sdkProject.id
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-slate-200 hover:border-blue-300'
-                  }`}
-                >
-                  <div>
-                    <div className="font-mono text-sm text-slate-700">{sdkProject.id}</div>
-                    <div className="text-xs text-slate-500">{sdkProject.traceCount} traces</div>
-                  </div>
-                  <button
-                    onClick={() => handleLinkSDKProject(sdkProject.id)}
-                    disabled={linkedSDKProjectId === sdkProject.id || project.id === sdkProject.id}
-                    className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded transition-colors ${
-                      linkedSDKProjectId === sdkProject.id || project.id === sdkProject.id
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-slate-100 text-slate-700 hover:bg-blue-100 hover:text-blue-700'
+              {sdkProjects.map((sdkProject) => {
+                const isLinked = linkedSDKProjectId === sdkProject.id;
+                const isAutoLinked = project.name === sdkProject.id;
+                return (
+                  <div
+                    key={sdkProject.id}
+                    className={`flex items-center justify-between p-3 border rounded-lg transition-colors ${
+                      isLinked || isAutoLinked
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-slate-200 hover:border-blue-300'
                     }`}
                   >
-                    <Link className="w-3 h-3" />
-                    {linkedSDKProjectId === sdkProject.id || project.id === sdkProject.id ? 'Linked' : 'Link'}
-                  </button>
-                </div>
-              ))}
+                    <div>
+                      <div className="font-mono text-sm text-slate-700">{sdkProject.id}</div>
+                      <div className="text-xs text-slate-500">
+                        {sdkProject.traceCount} traces
+                        {isAutoLinked && !isLinked && ' • Auto-linked (matches project name)'}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      {isLinked ? (
+                        <button
+                          onClick={handleUnlinkSDKProject}
+                          className="flex items-center gap-1 px-3 py-1.5 text-sm rounded transition-colors bg-red-100 text-red-700 hover:bg-red-200"
+                        >
+                          <Link className="w-3 h-3" />
+                          Unlink
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleLinkSDKProject(sdkProject.id)}
+                          disabled={isAutoLinked}
+                          className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded transition-colors ${
+                            isAutoLinked
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-slate-100 text-slate-700 hover:bg-blue-100 hover:text-blue-700'
+                          }`}
+                        >
+                          <Link className="w-3 h-3" />
+                          {isAutoLinked ? 'Auto-linked' : 'Link'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
