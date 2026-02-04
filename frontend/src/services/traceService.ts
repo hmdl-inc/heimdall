@@ -403,11 +403,18 @@ export const traceService = {
     const users = Array.from({ length: 80 }, (_, i) => `user_${1000 + i}`);
     const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
+    // Generate session IDs for each user (each user has 2-5 sessions)
+    const userSessions: Record<string, string[]> = {};
+    users.forEach(userId => {
+      const sessionCount = randomInt(2, 5);
+      userSessions[userId] = Array.from({ length: sessionCount }, () => crypto.randomUUID());
+    });
+
     for (let i = 0; i < 500; i++) {
       const dayWeight = Math.random() * Math.random();
       const timeOffset = Math.floor(dayWeight * THIRTY_DAYS_MS);
       const startTime = new Date(now.getTime() - timeOffset);
-      
+
       const hour = startTime.getHours();
       if (Math.random() > 0.3 && (hour < 8 || hour > 22)) {
         startTime.setHours(randomInt(9, 18));
@@ -421,6 +428,8 @@ export const traceService = {
       const errorType = isError ? randomItem(errorTypes) : undefined;
       const toolName = randomItem(tools);
       const traceId = crypto.randomUUID();
+      const userId = randomItem(users);
+      const sessionId = randomItem(userSessions[userId]);
 
       const spans = generateSpans(traceId, toolName, startTime, latency, isError);
 
@@ -441,7 +450,8 @@ export const traceService = {
         tool_version: randomItem(['v1.0.0', 'v1.0.1', 'v1.0.2', 'v1.1.0']),
         client_type: randomItem(clients),
         region: randomItem(['us-east-1', 'us-west-2', 'eu-west-1', 'ap-northeast-2', 'ap-southeast-1']),
-        user_id: randomItem(users),
+        user_id: userId,
+        session_id: sessionId,
         spans
       };
 
@@ -546,73 +556,100 @@ export const traceService = {
   // Get sessions grouped from traces
   async getSessions(projectId: string): Promise<Session[]> {
     const traces = await this.getTraces(projectId);
-    
-    // Group traces by user and time proximity (30 min gap = new session)
-    const SESSION_GAP_MS = 30 * 60 * 1000; // 30 minutes
-    const userTraces: Record<string, Trace[]> = {};
-    
-    traces.forEach(t => {
-      if (!userTraces[t.user_id]) userTraces[t.user_id] = [];
-      userTraces[t.user_id].push(t);
-    });
-
     const sessions: Session[] = [];
-    
-    Object.entries(userTraces).forEach(([userId, userTraceList]) => {
-      // Sort by time
-      userTraceList.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
-      
-      let currentSession: Trace[] = [];
-      let lastTime = 0;
-      
-      userTraceList.forEach(trace => {
-        const traceTime = new Date(trace.start_time).getTime();
-        
-        if (lastTime === 0 || traceTime - lastTime < SESSION_GAP_MS) {
-          currentSession.push(trace);
-        } else {
-          // Save current session and start new one
-          if (currentSession.length > 0) {
-            const startTime = currentSession[0].start_time;
-            const endTime = currentSession[currentSession.length - 1].end_time;
-            sessions.push({
-              sessionId: `${userId}_${new Date(startTime).getTime()}`,
-              userId,
-              clientType: currentSession[0].client_type,
-              startTime,
-              endTime,
-              durationMs: new Date(endTime).getTime() - new Date(startTime).getTime(),
-              traceCount: currentSession.length,
-              errorCount: currentSession.filter(t => t.status !== 'OK').length,
-              traces: currentSession
-            });
-          }
-          currentSession = [trace];
-        }
-        lastTime = new Date(trace.end_time).getTime();
+
+    // Check if traces have explicit session_id from SDK
+    const tracesWithSessionId = traces.filter(t => t.session_id);
+
+    if (tracesWithSessionId.length > 0) {
+      // Group by actual session_id from SDK
+      const sessionGroups: Record<string, Trace[]> = {};
+
+      traces.forEach(t => {
+        const sessionKey = t.session_id || `${t.user_id}_${new Date(t.start_time).getTime()}`;
+        if (!sessionGroups[sessionKey]) sessionGroups[sessionKey] = [];
+        sessionGroups[sessionKey].push(t);
       });
-      
-      // Don't forget last session
-      if (currentSession.length > 0) {
-        const startTime = currentSession[0].start_time;
-        const endTime = currentSession[currentSession.length - 1].end_time;
+
+      Object.entries(sessionGroups).forEach(([sessionId, sessionTraces]) => {
+        sessionTraces.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+        const startTime = sessionTraces[0].start_time;
+        const endTime = sessionTraces[sessionTraces.length - 1].end_time;
         sessions.push({
-          sessionId: `${userId}_${new Date(startTime).getTime()}`,
-          userId,
-          clientType: currentSession[0].client_type,
+          sessionId,
+          userId: sessionTraces[0].user_id,
+          clientType: sessionTraces[0].client_type,
           startTime,
           endTime,
           durationMs: new Date(endTime).getTime() - new Date(startTime).getTime(),
-          traceCount: currentSession.length,
-          errorCount: currentSession.filter(t => t.status !== 'OK').length,
-          traces: currentSession
+          traceCount: sessionTraces.length,
+          errorCount: sessionTraces.filter(t => t.status !== 'OK').length,
+          traces: sessionTraces
         });
-      }
-    });
-    
+      });
+    } else {
+      // Fallback: Group traces by user and time proximity (30 min gap = new session)
+      const SESSION_GAP_MS = 30 * 60 * 1000; // 30 minutes
+      const userTraces: Record<string, Trace[]> = {};
+
+      traces.forEach(t => {
+        if (!userTraces[t.user_id]) userTraces[t.user_id] = [];
+        userTraces[t.user_id].push(t);
+      });
+
+      Object.entries(userTraces).forEach(([userId, userTraceList]) => {
+        userTraceList.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+
+        let currentSession: Trace[] = [];
+        let lastTime = 0;
+
+        userTraceList.forEach(trace => {
+          const traceTime = new Date(trace.start_time).getTime();
+
+          if (lastTime === 0 || traceTime - lastTime < SESSION_GAP_MS) {
+            currentSession.push(trace);
+          } else {
+            if (currentSession.length > 0) {
+              const startTime = currentSession[0].start_time;
+              const endTime = currentSession[currentSession.length - 1].end_time;
+              sessions.push({
+                sessionId: `${userId}_${new Date(startTime).getTime()}`,
+                userId,
+                clientType: currentSession[0].client_type,
+                startTime,
+                endTime,
+                durationMs: new Date(endTime).getTime() - new Date(startTime).getTime(),
+                traceCount: currentSession.length,
+                errorCount: currentSession.filter(t => t.status !== 'OK').length,
+                traces: currentSession
+              });
+            }
+            currentSession = [trace];
+          }
+          lastTime = new Date(trace.end_time).getTime();
+        });
+
+        if (currentSession.length > 0) {
+          const startTime = currentSession[0].start_time;
+          const endTime = currentSession[currentSession.length - 1].end_time;
+          sessions.push({
+            sessionId: `${userId}_${new Date(startTime).getTime()}`,
+            userId,
+            clientType: currentSession[0].client_type,
+            startTime,
+            endTime,
+            durationMs: new Date(endTime).getTime() - new Date(startTime).getTime(),
+            traceCount: currentSession.length,
+            errorCount: currentSession.filter(t => t.status !== 'OK').length,
+            traces: currentSession
+          });
+        }
+      });
+    }
+
     // Sort sessions by start time descending
     sessions.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
-    
+
     return sessions;
   },
 

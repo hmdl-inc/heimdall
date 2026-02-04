@@ -224,6 +224,7 @@ export function transformOTLPToTraces(
         client_type: (rootAttrs['mcp.client_type'] as string || 'MCP') as Trace['client_type'],
         region: rootAttrs['heimdall.region'] as string || 'unknown',
         user_id: rootAttrs['heimdall.user_id'] as string || 'anonymous',
+        session_id: rootAttrs['heimdall.session_id'] as string | undefined,
         spans: heimdallSpans,
       };
 

@@ -35,6 +35,7 @@ export interface Trace {
   client_type: 'ChatGPT' | 'Claude' | 'Cursor' | 'Custom' | 'MCP';
   region: string;
   user_id: string;
+  session_id?: string;
   spans: Span[];
 }
 

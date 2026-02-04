@@ -251,12 +251,19 @@ function generateTraces() {
   const orgId = 'org-demo';
   const projectId = 'proj-demo';
 
+  // Generate session IDs for each user (each user has 2-5 sessions)
+  const userSessions = {};
+  users.forEach(userId => {
+    const sessionCount = randomInt(2, 5);
+    userSessions[userId] = Array.from({ length: sessionCount }, () => randomUUID());
+  });
+
   for (let i = 0; i < 500; i++) {
     // Spread over 30 days with some clustering (more recent = more traces)
     const dayWeight = Math.random() * Math.random(); // Bias towards recent
     const timeOffset = Math.floor(dayWeight * THIRTY_DAYS_MS);
     const startTime = new Date(now.getTime() - timeOffset);
-    
+
     // Add hour variation for realistic patterns (more activity during work hours)
     const hour = startTime.getHours();
     if (Math.random() > 0.3 && (hour < 8 || hour > 22)) {
@@ -271,6 +278,8 @@ function generateTraces() {
     const errorType = isError ? randomItem(errorTypes) : undefined;
     const toolName = randomItem(tools);
     const traceId = randomUUID();
+    const userId = randomItem(users);
+    const sessionId = randomItem(userSessions[userId]);
 
     // Generate spans for this trace
     const spans = generateSpans(traceId, toolName, startTime, latency, isError);
@@ -292,7 +301,8 @@ function generateTraces() {
       tool_version: randomItem(['v1.0.0', 'v1.0.1', 'v1.0.2', 'v1.1.0']),
       client_type: randomItem(clients),
       region: randomItem(['us-east-1', 'us-west-2', 'eu-west-1', 'ap-northeast-2', 'ap-southeast-1']),
-      user_id: randomItem(users),
+      user_id: userId,
+      session_id: sessionId,
       spans
     };
 
