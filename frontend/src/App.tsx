@@ -529,14 +529,40 @@ const AppContainer = () => {
       const user = authService.getCurrentUser();
       if (user) {
         setCurrentUser(user);
-        // Check Org/Project scoped to user
-        const org = await authService.getOrganization(user.id);
-        const proj = await authService.getProject(user.id);
+        
+        // Load all orgs and projects for dropdown first
+        const orgs = await authService.getAllOrganizations();
+        const projs = await authService.getAllProjects();
+        setOrganizations(orgs);
+        setProjects(projs);
+
+        // Try to restore selected org/project from localStorage
+        const savedOrgId = authService.getSelectedOrgId();
+        const savedProjectId = authService.getSelectedProjectId();
+
+        let org: Organization | null = null;
+        let proj: Project | null = null;
+
+        // Restore org from saved ID if exists
+        if (savedOrgId) {
+          org = orgs.find(o => o.id === savedOrgId) || null;
+        }
+        // Fallback to first org if saved one not found
+        if (!org && orgs.length > 0) {
+          org = orgs[0];
+        }
+
+        // Restore project from saved ID if exists and belongs to current org
+        if (savedProjectId && org) {
+          proj = projs.find(p => p.id === savedProjectId && p.organizationId === org!.id) || null;
+        }
+        // Fallback to first project in org if saved one not found
+        if (!proj && org) {
+          proj = projs.find(p => p.organizationId === org!.id) || null;
+        }
+
         setCurrentOrg(org);
         setCurrentProject(proj);
-        
-        // Load all orgs and projects for dropdown
-        await loadOrgsAndProjects();
       }
       setLoading(false);
     };
@@ -549,8 +575,10 @@ const AppContainer = () => {
     const org = await authService.getOrganization(user.id);
     if (org) {
         setCurrentOrg(org);
+        authService.saveSelectedOrgId(org.id);
         const proj = await authService.getProject(user.id);
         setCurrentProject(proj);
+        if (proj) authService.saveSelectedProjectId(proj.id);
         await loadOrgsAndProjects();
         navigate('/');
     } else {
@@ -565,6 +593,9 @@ const AppContainer = () => {
           const proj = await authService.getProject(currentUser.id);
           setCurrentOrg(org);
           setCurrentProject(proj);
+          // Save to localStorage
+          if (org) authService.saveSelectedOrgId(org.id);
+          if (proj) authService.saveSelectedProjectId(proj.id);
           await loadOrgsAndProjects();
           navigate('/');
       }
@@ -584,10 +615,12 @@ const AppContainer = () => {
 
   const handleSelectOrg = (org: Organization) => {
     setCurrentOrg(org);
+    authService.saveSelectedOrgId(org.id);
     // Find a project that belongs to this org
     const projectsInOrg = projects.filter(p => p.organizationId === org.id);
     if (projectsInOrg.length > 0) {
       setCurrentProject(projectsInOrg[0]);
+      authService.saveSelectedProjectId(projectsInOrg[0].id);
     } else {
       setCurrentProject(null);
     }
@@ -597,6 +630,7 @@ const AppContainer = () => {
 
   const handleSelectProject = (project: Project) => {
     setCurrentProject(project);
+    authService.saveSelectedProjectId(project.id);
     // Clear trace cache when switching
     traceService.clearCache();
   };
@@ -606,6 +640,7 @@ const AppContainer = () => {
     const newOrg = await authService.createOrganization(currentUser.id, name);
     await loadOrgsAndProjects();
     setCurrentOrg(newOrg);
+    authService.saveSelectedOrgId(newOrg.id);
     setCurrentProject(null);
   };
 
@@ -614,6 +649,7 @@ const AppContainer = () => {
     const newProject = await authService.createProject(currentUser.id, name, orgId);
     await loadOrgsAndProjects();
     setCurrentProject(newProject);
+    authService.saveSelectedProjectId(newProject.id);
   };
 
   // Filter projects by current org

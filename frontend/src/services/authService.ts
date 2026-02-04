@@ -1,6 +1,8 @@
 import { User, AuthResponse, Organization, Project } from '../types';
 
 const SESSION_KEY = 'heimdall_current_session';
+const SELECTED_ORG_KEY = 'heimdall_selected_org_id';
+const SELECTED_PROJECT_KEY = 'heimdall_selected_project_id';
 
 // Helper to simulate network delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -82,6 +84,25 @@ export const authService = {
 
   logout(): void {
     localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(SELECTED_ORG_KEY);
+    localStorage.removeItem(SELECTED_PROJECT_KEY);
+  },
+
+  // Save selected org/project IDs to localStorage
+  saveSelectedOrgId(orgId: string): void {
+    localStorage.setItem(SELECTED_ORG_KEY, orgId);
+  },
+
+  saveSelectedProjectId(projectId: string): void {
+    localStorage.setItem(SELECTED_PROJECT_KEY, projectId);
+  },
+
+  getSelectedOrgId(): string | null {
+    return localStorage.getItem(SELECTED_ORG_KEY);
+  },
+
+  getSelectedProjectId(): string | null {
+    return localStorage.getItem(SELECTED_PROJECT_KEY);
   },
 
   getCurrentUser(): User | null {
