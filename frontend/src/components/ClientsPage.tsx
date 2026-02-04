@@ -48,7 +48,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ project }) => {
   const [clientTraces, setClientTraces] = useState<Trace[]>([]);
   const [selectedTrace, setSelectedTrace] = useState<Trace | null>(null);
 
-  const traceProjectId = project.linkedTraceProjectId || project.id;
+  const traceProjectId = project.linkedTraceProjectId || project.name;
 
   useEffect(() => {
     const loadData = async () => {

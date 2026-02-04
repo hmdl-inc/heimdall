@@ -51,7 +51,7 @@ export const PerformancePage: React.FC<PerformancePageProps> = ({ project }) => 
   const [selectedTraceId, setSelectedTraceId] = useState<string | null>(null);
   const [selectedTrace, setSelectedTrace] = useState<any>(null);
 
-  const traceProjectId = project.linkedTraceProjectId || project.id;
+  const traceProjectId = project.linkedTraceProjectId || project.name;
 
   useEffect(() => {
     const loadData = async () => {

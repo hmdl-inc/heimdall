@@ -162,7 +162,7 @@ export const AlertsPage: React.FC<AlertsPageProps> = ({ project }) => {
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [testingSlack, setTestingSlack] = useState(false);
 
-  const traceProjectId = project.linkedTraceProjectId || project.id;
+  const traceProjectId = project.linkedTraceProjectId || project.name;
 
   // Load config from localStorage
   useEffect(() => {

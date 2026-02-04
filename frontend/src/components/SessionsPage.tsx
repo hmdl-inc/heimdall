@@ -51,7 +51,7 @@ export const SessionsPage: React.FC<SessionsPageProps> = ({ project }) => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
-  const traceProjectId = project.linkedTraceProjectId || project.id;
+  const traceProjectId = project.linkedTraceProjectId || project.name;
 
   useEffect(() => {
     const loadData = async () => {

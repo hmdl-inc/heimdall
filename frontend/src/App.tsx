@@ -256,8 +256,8 @@ const DashboardHome = ({ project, timeRange }: { project: Project; timeRange: Ti
   const [perfStats, setPerfStats] = useState<any>(null);
 
   const timeRangeHours = TIME_RANGE_OPTIONS.find(t => t.value === timeRange)?.hours ?? 0;
-  // Use linkedTraceProjectId if available, otherwise use project.id
-  const traceProjectId = project.linkedTraceProjectId || project.id;
+  // Use linkedTraceProjectId if available, otherwise use project.name (SDK uses name as project ID)
+  const traceProjectId = project.linkedTraceProjectId || project.name;
 
   useEffect(() => {
     const loadData = async () => {

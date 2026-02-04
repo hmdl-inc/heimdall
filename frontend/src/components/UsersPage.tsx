@@ -91,8 +91,8 @@ export const UsersPage: React.FC<UsersPageProps> = ({ project }) => {
   });
   const [isLoadingDownloads, setIsLoadingDownloads] = useState(false);
 
-  // Use linkedTraceProjectId if available, otherwise use project.id
-  const traceProjectId = project.linkedTraceProjectId || project.id;
+  // Use linkedTraceProjectId if available, otherwise use project.name (SDK uses name as project ID)
+  const traceProjectId = project.linkedTraceProjectId || project.name;
   
   // Fetch npm download stats
   const fetchNpmDownloads = async (packageName: string): Promise<{ total: number; daily: { date: string; downloads: number }[] }> => {
